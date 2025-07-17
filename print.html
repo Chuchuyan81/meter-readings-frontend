@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Справка о расходовании воды</title>
+    <style>
+        @media print {
+            @page {
+                margin: 1cm;
+            }
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.2;
+            margin: 0;
+            padding: 10px;
+            font-size: 14px;
+        }
+
+        .print-container {
+            width: 14cm;
+            height: 5cm;
+            margin: 0 auto;
+            padding: 0;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2px;
+        }
+
+        .header h2 {
+            margin: 0 0 1px 0;
+            font-size: 15px;
+            line-height: 1;
+        }
+
+        .header p {
+            margin: 0;
+            line-height: 1;
+        }
+
+        .address {
+            margin-bottom: 3px;
+            text-align: center;
+            line-height: 1;
+        }
+
+        .bold {
+            font-weight: bold;
+        }
+
+        .underline {
+            text-decoration: underline;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 3px;
+        }
+
+        th, td {
+            border: 1px solid black;
+            padding: 2px;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        th {
+            line-height: 1.1;
+        }
+
+        .signature {
+            margin-top: 3px;
+            text-align: right;
+            line-height: 1;
+        }
+
+        .no-print {
+            display: none;
+        }
+
+        @media screen {
+            .no-print {
+                display: block;
+                margin: 20px 0;
+                text-align: center;
+            }
+
+            .print-btn {
+                padding: 10px 20px;
+                font-size: 16px;
+                background-color: #3498db;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+            }
+
+            .print-btn:hover {
+                background-color: #2980b9;
+            }
+
+            body {
+                background-color: #f5f6fa;
+            }
+
+            .print-container {
+                background-color: white;
+                padding: 10px;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="print-container">
+        <div class="header">
+            <h2>Справка</h2>
+            <p>расходования холодной и горячей воды по приборам учёта</p>
+        </div>
+
+        <div class="address">
+            <p>ул. Котовского д.45 квартира № <span id="apartment" class="bold">73</span> за <span id="month" class="bold underline"></span> месяц <span id="year"></span> г.</p>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Вид</th>
+                    <th>Показания на<br>начало месяца</th>
+                    <th>Показания на<br>конец месяца</th>
+                    <th>Всего за месяц</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Холодная вода</td>
+                    <td id="cold-prev"></td>
+                    <td id="cold-current"></td>
+                    <td id="cold-total"></td>
+                </tr>
+                <tr>
+                    <td>Горячая вода</td>
+                    <td id="hot-prev"></td>
+                    <td id="hot-current"></td>
+                    <td id="hot-total"></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="signature">
+            <p>Квартиросъемщик:_________________/__________________/</p>
+        </div>
+
+        <div class="no-print">
+            <button class="print-btn" onclick="window.print()">Распечатать справку</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Получаем параметры из URL
+            const params = new URLSearchParams(window.location.search);
+            
+            // Заполняем данные
+            document.getElementById('month').textContent = params.get('month') || '_____';
+            document.getElementById('year').textContent = params.get('year') || '_____';
+            
+            document.getElementById('cold-prev').textContent = params.get('coldPrev') || '';
+            document.getElementById('cold-current').textContent = params.get('coldCurrent') || '';
+            document.getElementById('cold-total').textContent = params.get('coldTotal') || '';
+            
+            document.getElementById('hot-prev').textContent = params.get('hotPrev') || '';
+            document.getElementById('hot-current').textContent = params.get('hotCurrent') || '';
+            document.getElementById('hot-total').textContent = params.get('hotTotal') || '';
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Показания счетчиков</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <h1>Ввод показаний счетчиков</h1>
+        <nav>
+            <a href="history.html" class="nav-link nav-link-light">История показаний</a>
+            <a href="tariffs.html" class="nav-link nav-link-light">Управление тарифами</a>
+        </nav>
+    </header>
+    <main>
+        <!-- Фильтр для выбора города -->
+        <div class="filter">
+            <label for="citySelect">Выберите город:</label>
+            <div class="city-select-wrapper">
+                <select id="citySelect" class="city-select">
+                    <!-- Опции будут добавлены через JavaScript -->
+                </select>
+            </div>
+        </div>
+        <!-- Контейнер для таблицы -->
+        <div class="table-container">
+            <table class="meter-table">
+                <thead>
+                    <tr>
+                        <th>Тип ресурса</th>
+                        <th>Дата предыдущих показаний</th>
+                        <th>Предыдущие показания</th>
+                        <th>Дата текущих показаний</th>
+                        <th>Показания</th>
+                        <th>Расход</th>
+                        <th>Сумма</th>
+                    </tr>
+                </thead>
+                <tbody id="meterTableBody">
+                    <!-- Строки таблицы будут добавлены через JavaScript -->
+                </tbody>
+            </table>
+        </div>
+        <!-- Контейнер для кнопок -->
+        <div class="button-container">
+            <button id="calculateButton" class="btn">Рассчитать</button>
+            <button id="saveButton" class="btn">Сохранить</button>
+            <button id="printButton" class="btn">Распечатать справку</button>
+        </div>
+        <!-- Блок для отображения итоговой суммы -->
+        <div id="totalAmount" class="total-amount"></div>
+    </main>
+
+    <!-- Встраивание чат-бота -->
+    <link href="https://chat.autofaq.ai/widget/static/css/main.css" rel="stylesheet">
+    <script 
+       data-widget-host="https://chat.autofaq.ai"
+       data-widget-service-id="f0885e3f-aa26-4eff-b501-c7f365572b69"
+       data-widget-channel-id="e4d28901-8339-4c9a-a83d-5cc88b2700da"
+       data-widget-user-login="default"
+       data-widget-user-name=""
+       data-widget-user-email=""
+              src="https://chat.autofaq.ai/widget/static/js/main.js"
+       id="autofaqWidget"></script>
+
+    <!-- Appwrite SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@15.0.0"></script>
+    <!-- Конфигурация -->
+    <script src="config.js"></script>
+    <!-- Аутентификация -->
+    <script src="auth.js"></script>
+    <!-- Основной скрипт -->
+    <script src="appwrite-script.js"></script>
+</body>
+</html>

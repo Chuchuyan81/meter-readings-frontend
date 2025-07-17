@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Управление тарифами</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <h1>Управление тарифами</h1>
+        <nav>
+            <a href="index.html" class="nav-link nav-link-light">Ввод показаний</a>
+            <a href="history.html" class="nav-link nav-link-light">История показаний</a>
+        </nav>
+    </header>
+    <main>
+        <div class="filter-container">
+            <div class="filter-row">
+                <!-- Фильтр для выбора города -->
+                <div class="filter-item">
+                    <label for="citySelect">Выберите город:</label>
+                    <select id="citySelect" class="filter-select">
+                        <option value="">Выберите город</option>
+                    </select>
+                </div>
+
+                <!-- Фильтр для выбора типа ресурса -->
+                <div class="filter-item">
+                    <label for="resourceType">Тип ресурса:</label>
+                    <select id="resourceType" class="filter-select" disabled>
+                        <option value="">Сначала выберите город</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Контейнер для информации о тарифе -->
+        <div id="tariffInfo" class="tariff-container" style="display: none;">
+            <div class="tariff-info-row">
+                <div class="tariff-item">
+                    <label>Наименование ресурса:</label>
+                    <div id="resourceName" class="tariff-value"></div>
+                </div>
+                <div class="tariff-item">
+                    <label>Текущий тариф:</label>
+                    <div id="currentTariff" class="tariff-value"></div>
+                </div>
+                <div class="tariff-item">
+                    <label for="newTariff">Новый тариф:</label>
+                    <input type="number" id="newTariff" class="tariff-input" step="0.01" min="0" placeholder="Введите новый тариф">
+                </div>
+                <div class="tariff-item">
+                    <label class="invisible">Действие:</label>
+                    <button id="saveTariffButton" class="btn btn-primary">Сохранить</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Appwrite SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@15.0.0"></script>
+    <!-- Конфигурация -->
+    <script src="config.js"></script>
+    <!-- Аутентификация -->
+    <script src="auth.js"></script>
+    <!-- Скрипт тарифов -->
+    <script src="appwrite-tariffs.js"></script>
+</body>
+</html> 

@@ -1,0 +1,521 @@
+:root {
+    --primary-color: #3498db;
+    --primary-dark: #2980b9;
+    --secondary-color: #2ecc71;
+    --background-color: #f5f6fa;
+    --text-color: #34495e;
+    --shadow-color: rgba(0, 0, 0, 0.1);
+    --header-bg: #3498db;
+    --header-text: #ffffff;
+    --electricity-color: #b3fac5; /* Зеленый цвет для электричества */
+    --hot-water-color: #ffc4c9; /* Красный цвет для горячей воды */
+    --cold-water-color: #c1f3ff; /* Голубой цвет для холодной воды */
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+}
+
+header {
+    background-color: var(--primary-color);
+    color: white;
+    text-align: center;
+    padding: 2rem 0;
+}
+
+h1 {
+    margin: 0;
+}
+
+main {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+    overflow-x: auto;
+}
+
+.filter {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px var(--shadow-color);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+/* Стили для выпадающего списка выбора города */
+.city-select-wrapper {
+    width: 100%;
+    max-width: none;
+}
+
+.city-select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    height: 42px;
+    font-size: 1rem;
+    font-family: 'Roboto', sans-serif;
+    color: var(--text-color);
+    background-color: white;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    appearance: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+.city-select:hover:not(:disabled) {
+    border-color: var(--primary-color);
+}
+
+.city-select:focus:not(:disabled) {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.25);
+    outline: none;
+}
+
+.city-select:disabled {
+    background-color: #e9ecef;
+    cursor: not-allowed;
+    opacity: 0.75;
+}
+
+/* Стили для стрелки выпадающего списка */
+.city-select-wrapper::after {
+    content: '▼';
+    position: absolute;
+    top: 50%;
+    right: 16px;
+    transform: translateY(-50%);
+    pointer-events: none; /* Чтобы клик срабатывал на <select>, а не на стрелку */
+    color: var(--primary-color);
+    font-size: 12px;
+}
+
+/* Стили для опций внутри выпадающего списка */
+.city-select option {
+    padding: 8px 16px;
+    font-size: 16px;
+    background-color: white;
+    color: var(--text-color);
+}
+
+.city-select option:hover {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.table-container {
+    overflow-x: auto;
+}
+
+.meter-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 0 10px var(--shadow-color);
+}
+
+.meter-table th,
+.meter-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: center;
+}
+
+.meter-table th {
+    background-color: #f2f2f2;
+}
+
+.meter-table input[type="number"] {
+    width: 80px;
+    padding: 5px;
+    box-sizing: border-box;
+    border: 1px solid #ddd;
+    text-align: center;
+}
+
+.meter-table input[type="text"] {
+    width: 80px;
+    padding: 5px;
+    box-sizing: border-box;
+    border: 1px solid #ddd;
+    text-align: center;
+    background-color: #fff;
+}
+
+/* Стили для цветов в столбце "Тип ресурса" */
+.meter-table td.resource-type.electricity {
+    background-color: var(--electricity-color); /* Зеленый цвет для электричества */
+    color: var(--text-color); /* Цвет текста как во всей таблице */
+}
+
+.meter-table td.resource-type.hot-water {
+    background-color: var(--hot-water-color); /* Красный цвет для горячей воды */
+    color: var(--text-color); /* Цвет текста как во всей таблице */
+}
+
+.meter-table td.resource-type.cold-water {
+    background-color: var(--cold-water-color); /* Голубой цвет для холодной воды */
+    color: var(--text-color); /* Цвет текста как во всей таблице */
+}
+
+.button-container {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.button-container button {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    font-size: 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.button-container button:hover {
+    background-color: var(--secondary-color);
+}
+
+/* Стили для шапки таблицы в зависимости от города */
+.meter-table thead.city-1 th {
+    background-color: #8ac2e7; /* Синий цвет для города 1 */
+}
+
+.meter-table thead.city-2 th {
+    background-color: #95dbb2; /* Зеленый цвет для города 2 */
+}
+
+.meter-table thead.city-3 th {
+    background-color: #e69d95; /* Красный цвет для города 3 */
+}
+
+/* Стили для навигации */
+nav {
+    margin-top: 1rem;
+}
+
+.nav-link {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    background-color: white;
+    display: inline-block;
+}
+
+.nav-link:hover {
+    background-color: var(--primary-dark);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.nav-link-light {
+    color: white;
+    background-color: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(5px);
+}
+
+.nav-link-light:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Стили для фильтров на странице истории */
+.filter-container {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px var(--shadow-color);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    align-items: flex-end;
+}
+
+.filter-item {
+    flex: 1;
+    min-width: 200px;
+}
+
+.filter-item.filter-date-range {
+    flex: 2;
+    min-width: 300px;
+}
+
+.filter-item.filter-button {
+    flex: 0 0 auto;
+    min-width: auto;
+}
+
+.filter-item label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.filter-item label.invisible {
+    visibility: hidden;
+    height: 21px; /* Высота других label */
+}
+
+.filter-select,
+.date-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 1rem;
+    color: var(--text-color);
+    background-color: white;
+    transition: all 0.3s ease;
+}
+
+.filter-select:hover:not(:disabled),
+.date-input:hover:not(:disabled) {
+    border-color: var(--primary-color);
+}
+
+.filter-select:focus:not(:disabled),
+.date-input:focus:not(:disabled) {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.25);
+    outline: none;
+}
+
+.filter-select:disabled,
+.date-input:disabled {
+    background-color: #e9ecef;
+    cursor: not-allowed;
+    opacity: 0.75;
+}
+
+.date-range {
+    display: flex;
+    gap: 1rem;
+}
+
+/* Стили для кнопок */
+.btn {
+    padding: 0.75rem 2rem;
+    font-size: 1rem;
+    font-weight: 500;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background-color: var(--primary-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* Стили для таблицы */
+.table-container {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px var(--shadow-color);
+    overflow: hidden;
+}
+
+.meter-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0;
+}
+
+.meter-table th {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    font-weight: 500;
+    text-align: left;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.meter-table td {
+    padding: 1rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.meter-table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.no-data,
+.error {
+    text-align: center;
+    padding: 2rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.error {
+    color: #dc3545;
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 768px) {
+    .filter-row {
+        flex-direction: column;
+    }
+
+    .filter-item,
+    .filter-item.filter-date-range {
+        width: 100%;
+        min-width: 100%;
+    }
+
+    .date-range {
+        flex-direction: column;
+    }
+
+    .filter-item.filter-button {
+        width: 100%;
+    }
+
+    .btn {
+        width: 100%;
+    }
+}
+
+/* Стили для страницы тарифов */
+.tariff-container {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px var(--shadow-color);
+    padding: 1.5rem;
+    margin-top: 2rem;
+}
+
+.tariff-info-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    align-items: flex-end;
+}
+
+.tariff-item {
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+}
+
+.tariff-item:last-child {
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+}
+
+.tariff-item label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.tariff-value {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.75rem 1rem;
+    height: 42px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    font-size: 1rem;
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+}
+
+.tariff-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.75rem 1rem;
+    height: 42px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 1rem;
+    color: var(--text-color);
+    transition: all 0.3s ease;
+}
+
+#saveTariffButton {
+    width: 100%;
+    height: 42px;
+    box-sizing: border-box;
+    padding: 0 1rem;
+}
+
+/* Адаптивность для страницы тарифов */
+@media (max-width: 768px) {
+    .tariff-info-row {
+        flex-direction: column;
+    }
+
+    .tariff-item {
+        width: 100%;
+        min-width: 100%;
+    }
+
+    .tariff-item:last-child {
+        width: 100%;
+    }
+
+    #saveTariffButton {
+        width: 100%;
+    }
+}
+
+/* Стили для статусов тарифов */
+.status {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.status.active {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.status.inactive {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}

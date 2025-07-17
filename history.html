@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>История показаний счетчиков</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Подключаем стили для календаря -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+</head>
+<body>
+    <header>
+        <h1>История показаний счетчиков</h1>
+        <nav>
+            <a href="index.html" class="nav-link nav-link-light">Ввод показаний</a>
+            <a href="tariffs.html" class="nav-link nav-link-light">Управление тарифами</a>
+        </nav>
+    </header>
+    <main>
+        <div class="filter-container">
+            <div class="filter-row">
+                <!-- Фильтр для выбора города -->
+                <div class="filter-item">
+                    <label for="citySelect">Выберите город:</label>
+                    <select id="citySelect" class="filter-select">
+                        <option value="">Выберите город</option>
+                    </select>
+                </div>
+
+                <!-- Фильтр для выбора типа ресурса -->
+                <div class="filter-item">
+                    <label for="resourceType">Тип ресурса:</label>
+                    <select id="resourceType" class="filter-select" disabled>
+                        <option value="">Сначала выберите город</option>
+                    </select>
+                </div>
+
+                <!-- Фильтр для выбора периода -->
+                <div class="filter-item filter-date-range">
+                    <label for="dateRange">Период:</label>
+                    <div class="date-range">
+                        <input type="text" id="dateFrom" class="date-input" placeholder="С" disabled>
+                        <input type="text" id="dateTo" class="date-input" placeholder="По" disabled>
+                    </div>
+                </div>
+
+                <!-- Кнопка показать -->
+                <div class="filter-item filter-button">
+                    <label class="invisible">Действие:</label>
+                    <button id="showButton" class="btn btn-primary" disabled>Показать</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Контейнер для таблицы -->
+        <div class="table-container">
+            <table class="meter-table">
+                <thead>
+                    <tr>
+                        <th>Дата предыдущих показаний</th>
+                        <th>Предыдущие показания</th>
+                        <th>Дата текущих показаний</th>
+                        <th>Текущие показания</th>
+                        <th>Расход</th>
+                    </tr>
+                </thead>
+                <tbody id="historyTableBody">
+                    <!-- Данные будут добавлены через JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <!-- Подключаем календарь -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ru.js"></script>
+    <!-- Appwrite SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@15.0.0"></script>
+    <!-- Конфигурация -->
+    <script src="config.js"></script>
+    <!-- Аутентификация -->
+    <script src="auth.js"></script>
+    <!-- Скрипт истории -->
+    <script src="appwrite-history.js"></script>
+</body>
+</html> 
