@@ -23,6 +23,7 @@ window.METER_READINGS_COLLECTION_ID = METER_READINGS_COLLECTION_ID;
 // Инициализация клиента Appwrite
 let client;
 let databases;
+let account;
 
 function initAppwrite() {
     try {
@@ -32,13 +33,15 @@ function initAppwrite() {
             return false;
         }
 
-        const { Client, Databases } = Appwrite;
+        const { Client, Databases, Account } = Appwrite;
         
         client = new Client()
             .setEndpoint(APPWRITE_ENDPOINT)
             .setProject(APPWRITE_PROJECT_ID);
         
         databases = new Databases(client);
+        account = new Account(client);
+        
         console.log('Appwrite клиент инициализирован');
         return true;
     } catch (error) {
@@ -47,9 +50,33 @@ function initAppwrite() {
     }
 }
 
+// Функция для анонимной авторизации
+async function createAnonymousSession() {
+    try {
+        if (!account) {
+            console.error('Account не инициализирован');
+            return false;
+        }
+        
+        const session = await account.createAnonymousSession();
+        console.log('Анонимная сессия создана:', session);
+        return true;
+    } catch (error) {
+        console.error('Ошибка создания анонимной сессии:', error);
+        return false;
+    }
+}
+
 // Проверка подключения к Appwrite
 async function testAppwriteConnection() {
     try {
+        // Сначала создаем анонимную сессию
+        const authResult = await createAnonymousSession();
+        if (!authResult) {
+            console.error('Не удалось создать анонимную сессию');
+            return false;
+        }
+        
         const response = await databases.list();
         console.log('Подключение к Appwrite успешно');
         return true;
@@ -62,5 +89,7 @@ async function testAppwriteConnection() {
 // Делаем функции доступными глобально
 window.initAppwrite = initAppwrite;
 window.testAppwriteConnection = testAppwriteConnection;
+window.createAnonymousSession = createAnonymousSession;
 window.client = client;
-window.databases = databases; 
+window.databases = databases;
+window.account = account; 

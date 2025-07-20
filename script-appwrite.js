@@ -27,17 +27,30 @@ document.addEventListener('DOMContentLoaded', function () {
     console.log('METER_READINGS_COLLECTION_ID:', METER_READINGS_COLLECTION_ID);
 
     // Инициализация Appwrite
-    try {
-        if (!initAppwrite()) {
-            console.error('Ошибка инициализации Appwrite');
-            alert('Ошибка инициализации Appwrite. Проверьте консоль для деталей.');
-            return;
+    async function initializeAppwrite() {
+        try {
+            if (!initAppwrite()) {
+                console.error('Ошибка инициализации Appwrite');
+                alert('Ошибка инициализации Appwrite. Проверьте консоль для деталей.');
+                return false;
+            }
+            console.log('Appwrite инициализирован успешно');
+            
+            // Создаем анонимную сессию
+            const authResult = await createAnonymousSession();
+            if (!authResult) {
+                console.error('Не удалось создать анонимную сессию');
+                alert('Ошибка авторизации. Проверьте консоль для деталей.');
+                return false;
+            }
+            
+            console.log('Анонимная авторизация выполнена успешно');
+            return true;
+        } catch (error) {
+            console.error('Критическая ошибка инициализации Appwrite:', error);
+            alert(`Критическая ошибка инициализации Appwrite: ${error.message}`);
+            return false;
         }
-        console.log('Appwrite инициализирован успешно');
-    } catch (error) {
-        console.error('Критическая ошибка инициализации Appwrite:', error);
-        alert(`Критическая ошибка инициализации Appwrite: ${error.message}`);
-        return;
     }
 
     // Функция для получения списка городов из Appwrite
@@ -86,6 +99,18 @@ document.addEventListener('DOMContentLoaded', function () {
                 code: error.code,
                 response: error.response
             });
+            
+            // Проверяем, является ли ошибка связанной с авторизацией
+            if (error.code === 401) {
+                console.log('Попытка повторной авторизации...');
+                const authResult = await createAnonymousSession();
+                if (authResult) {
+                    console.log('Повторная авторизация успешна, повторяем запрос...');
+                    await fetchCities(); // Рекурсивный вызов
+                    return;
+                }
+            }
+            
             alert(`Ошибка загрузки городов: ${error.message}`);
         }
     }
@@ -145,6 +170,18 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         } catch (error) {
             console.error('Ошибка загрузки счетчиков:', error);
+            
+            // Проверяем, является ли ошибка связанной с авторизацией
+            if (error.code === 401) {
+                console.log('Попытка повторной авторизации для счетчиков...');
+                const authResult = await createAnonymousSession();
+                if (authResult) {
+                    console.log('Повторная авторизация успешна, повторяем запрос счетчиков...');
+                    await fetchMeters(cityId); // Рекурсивный вызов
+                    return;
+                }
+            }
+            
             alert('Ошибка загрузки счетчиков');
         }
     }
@@ -288,6 +325,19 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             } catch (error) {
                 console.error('Ошибка сохранения показаний:', error);
+                
+                // Проверяем, является ли ошибка связанной с авторизацией
+                if (error.code === 401) {
+                    console.log('Попытка повторной авторизации для сохранения...');
+                    const authResult = await createAnonymousSession();
+                    if (authResult) {
+                        console.log('Повторная авторизация успешна, повторяем сохранение...');
+                        // Повторяем сохранение
+                        saveButton.click();
+                        return;
+                    }
+                }
+                
                 alert('Ошибка сохранения показаний');
             }
         } else {
@@ -295,6 +345,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Загружаем города при загрузке страницы
-    fetchCities();
+    // Инициализируем Appwrite и загружаем города
+    initializeAppwrite().then(success => {
+        if (success) {
+            fetchCities();
+        }
+    });
 }); 
