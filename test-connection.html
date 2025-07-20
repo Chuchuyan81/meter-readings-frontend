@@ -8,128 +8,202 @@
         body {
             font-family: Arial, sans-serif;
             max-width: 800px;
-            margin: 50px auto;
+            margin: 0 auto;
             padding: 20px;
+            background-color: #f5f5f5;
         }
-        .test-result {
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status {
             padding: 10px;
             margin: 10px 0;
-            border-radius: 5px;
+            border-radius: 4px;
         }
-        .success { background: #d4edda; color: #155724; }
-        .error { background: #f8d7da; color: #721c24; }
-        .info { background: #d1ecf1; color: #0c5460; }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
         button {
-            padding: 10px 20px;
-            margin: 5px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            background: #007bff;
+            background-color: #007bff;
             color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
         }
-        button:hover { background: #0056b3; }
-        pre {
-            background: #f8f9fa;
+        button:hover {
+            background-color: #0056b3;
+        }
+        .log {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
             padding: 10px;
-            border-radius: 5px;
-            overflow-x: auto;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
         }
     </style>
 </head>
 <body>
-    <h1>🧪 Тест подключения к Appwrite</h1>
-    
-    <div id="config-info" class="test-result info">
-        <h3>Конфигурация:</h3>
-        <pre id="config-display"></pre>
-    </div>
-    
-    <div>
+    <div class="container">
+        <h1>Тест подключения к Appwrite</h1>
+        
+        <div id="status"></div>
+        
+        <button onclick="testSDK()">Тест загрузки SDK</button>
+        <button onclick="testInit()">Тест инициализации</button>
         <button onclick="testConnection()">Тест подключения</button>
         <button onclick="testDatabase()">Тест базы данных</button>
-        <button onclick="testCollections()">Тест коллекций</button>
-        <button onclick="clearResults()">Очистить результаты</button>
+        <button onclick="clearLog()">Очистить лог</button>
+        
+        <div class="log" id="log"></div>
     </div>
-    
-    <div id="results"></div>
 
-    <script src="https://cdn.jsdelivr.net/npm/appwrite@15.0.0"></script>
-    <script src="config.js"></script>
+    <!-- Appwrite SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@11.0.0"></script>
+    <!-- Конфигурация Appwrite -->
+    <script src="appwrite-config.js"></script>
     
     <script>
-        // Отображение конфигурации
-        document.getElementById('config-display').textContent = 
-            JSON.stringify(APPWRITE_CONFIG, null, 2);
-        
-        // Инициализация Appwrite
-        const { Client, Databases } = Appwrite;
-        const client = new Client();
-        const databases = new Databases(client);
-        
-        client
-            .setEndpoint(APPWRITE_CONFIG.endpoint)
-            .setProject(APPWRITE_CONFIG.projectId);
-        
-        function addResult(message, type = 'info') {
-            const results = document.getElementById('results');
-            const div = document.createElement('div');
-            div.className = `test-result ${type}`;
-            div.innerHTML = `<strong>[${new Date().toLocaleTimeString()}]</strong> ${message}`;
-            results.appendChild(div);
+        function log(message) {
+            const logElement = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logElement.textContent += `[${timestamp}] ${message}\n`;
+            logElement.scrollTop = logElement.scrollHeight;
         }
-        
-        async function testConnection() {
-            addResult('🔌 Тестирование подключения к Appwrite...', 'info');
+
+        function clearLog() {
+            document.getElementById('log').textContent = '';
+        }
+
+        function updateStatus(message, type = 'info') {
+            const statusElement = document.getElementById('status');
+            statusElement.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        function testSDK() {
+            log('Тестирование загрузки Appwrite SDK...');
+            
+            if (typeof Appwrite === 'undefined') {
+                log('ОШИБКА: Appwrite SDK не загружен');
+                updateStatus('Appwrite SDK не загружен', 'error');
+                return false;
+            }
+            
+            log('✓ Appwrite SDK загружен успешно');
+            log(`Доступные классы: ${Object.keys(Appwrite).join(', ')}`);
+            updateStatus('Appwrite SDK загружен успешно', 'success');
+            return true;
+        }
+
+        function testInit() {
+            log('Тестирование инициализации Appwrite...');
+            
+            if (!testSDK()) {
+                return false;
+            }
             
             try {
-                // Простая проверка - попытка получить список баз данных
-                const response = await databases.list();
-                addResult(`✅ Подключение успешно! Найдено баз данных: ${response.databases.length}`, 'success');
-            } catch (error) {
-                addResult(`❌ Ошибка подключения: ${error.message}`, 'error');
-                console.error('Ошибка подключения:', error);
-            }
-        }
-        
-        async function testDatabase() {
-            addResult('📊 Тестирование базы данных...', 'info');
-            
-            try {
-                const database = await databases.get(APPWRITE_CONFIG.databaseId);
-                addResult(`✅ База данных "${database.name}" доступна`, 'success');
-            } catch (error) {
-                addResult(`❌ Ошибка базы данных: ${error.message}`, 'error');
-                console.error('Ошибка базы данных:', error);
-            }
-        }
-        
-        async function testCollections() {
-            addResult('📋 Тестирование коллекций...', 'info');
-            
-            const collections = Object.entries(APPWRITE_CONFIG.collections);
-            
-            for (const [name, id] of collections) {
-                try {
-                    const response = await databases.listDocuments(
-                        APPWRITE_CONFIG.databaseId,
-                        id,
-                        []
-                    );
-                    addResult(`✅ ${name}: ${response.documents.length} документов`, 'success');
-                } catch (error) {
-                    addResult(`❌ ${name}: ${error.message}`, 'error');
+                const result = initAppwrite();
+                if (result) {
+                    log('✓ Инициализация Appwrite прошла успешно');
+                    updateStatus('Инициализация Appwrite прошла успешно', 'success');
+                    return true;
+                } else {
+                    log('✗ Ошибка инициализации Appwrite');
+                    updateStatus('Ошибка инициализации Appwrite', 'error');
+                    return false;
                 }
+            } catch (error) {
+                log(`✗ Ошибка инициализации: ${error.message}`);
+                updateStatus(`Ошибка инициализации: ${error.message}`, 'error');
+                return false;
             }
         }
-        
-        function clearResults() {
-            document.getElementById('results').innerHTML = '';
+
+        async function testConnection() {
+            log('Тестирование подключения к Appwrite...');
+            
+            if (!testInit()) {
+                return false;
+            }
+            
+            try {
+                const result = await testAppwriteConnection();
+                if (result) {
+                    log('✓ Подключение к Appwrite успешно');
+                    updateStatus('Подключение к Appwrite успешно', 'success');
+                    return true;
+                } else {
+                    log('✗ Ошибка подключения к Appwrite');
+                    updateStatus('Ошибка подключения к Appwrite', 'error');
+                    return false;
+                }
+            } catch (error) {
+                log(`✗ Ошибка подключения: ${error.message}`);
+                updateStatus(`Ошибка подключения: ${error.message}`, 'error');
+                return false;
+            }
         }
-        
-        // Автоматический тест при загрузке
-        window.addEventListener('load', () => {
-            addResult('🚀 Страница загружена, готов к тестированию', 'info');
+
+        async function testDatabase() {
+            log('Тестирование доступа к базе данных...');
+            
+            if (!await testConnection()) {
+                return false;
+            }
+            
+            try {
+                const response = await databases.list();
+                log(`✓ Найдено баз данных: ${response.databases.length}`);
+                
+                for (const db of response.databases) {
+                    log(`  - ${db.name} (${db.$id})`);
+                }
+                
+                // Проверяем нашу базу данных
+                const ourDb = response.databases.find(db => db.$id === DATABASE_ID);
+                if (ourDb) {
+                    log(`✓ База данных "${DATABASE_ID}" найдена`);
+                    updateStatus('База данных найдена', 'success');
+                } else {
+                    log(`✗ База данных "${DATABASE_ID}" не найдена`);
+                    updateStatus('База данных не найдена', 'error');
+                }
+                
+                return true;
+            } catch (error) {
+                log(`✗ Ошибка доступа к базе данных: ${error.message}`);
+                updateStatus(`Ошибка доступа к базе данных: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        // Автоматический тест при загрузке страницы
+        window.addEventListener('load', function() {
+            log('Страница загружена, начинаем тестирование...');
+            setTimeout(() => {
+                testSDK();
+            }, 1000);
         });
     </script>
 </body>

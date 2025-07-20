@@ -8,19 +8,51 @@ document.addEventListener('DOMContentLoaded', function () {
     let metersData = [];
     let selectedCityId = null;
 
+    // Проверяем, что Appwrite SDK загружен
+    if (typeof Appwrite === 'undefined') {
+        alert('Ошибка загрузки Appwrite SDK');
+        return;
+    }
+
+    // Импортируем необходимые классы из Appwrite
+    const { Query, ID } = Appwrite;
+
+    // Проверяем доступность констант
+    console.log('Проверка констант:');
+    console.log('DATABASE_ID:', DATABASE_ID);
+    console.log('CITIES_COLLECTION_ID:', CITIES_COLLECTION_ID);
+    console.log('METER_TYPES_COLLECTION_ID:', METER_TYPES_COLLECTION_ID);
+    console.log('METERS_COLLECTION_ID:', METERS_COLLECTION_ID);
+    console.log('TARIFFS_COLLECTION_ID:', TARIFFS_COLLECTION_ID);
+    console.log('METER_READINGS_COLLECTION_ID:', METER_READINGS_COLLECTION_ID);
+
     // Инициализация Appwrite
-    if (!initAppwrite()) {
-        alert('Ошибка инициализации Appwrite');
+    try {
+        if (!initAppwrite()) {
+            console.error('Ошибка инициализации Appwrite');
+            alert('Ошибка инициализации Appwrite. Проверьте консоль для деталей.');
+            return;
+        }
+        console.log('Appwrite инициализирован успешно');
+    } catch (error) {
+        console.error('Критическая ошибка инициализации Appwrite:', error);
+        alert(`Критическая ошибка инициализации Appwrite: ${error.message}`);
         return;
     }
 
     // Функция для получения списка городов из Appwrite
     async function fetchCities() {
         try {
+            console.log('Загрузка городов...');
+            console.log('DATABASE_ID:', DATABASE_ID);
+            console.log('CITIES_COLLECTION_ID:', CITIES_COLLECTION_ID);
+            
             const response = await databases.listDocuments(
                 DATABASE_ID,
                 CITIES_COLLECTION_ID
             );
+            
+            console.log('Ответ от Appwrite:', response);
             
             if (response.documents && response.documents.length > 0) {
                 // Очищаем список перед добавлением новых опций
@@ -41,13 +73,20 @@ document.addEventListener('DOMContentLoaded', function () {
                     option.textContent = city.name;
                     citySelect.appendChild(option);
                 });
+                
+                console.log(`Загружено городов: ${response.documents.length}`);
             } else {
                 console.error('Города не найдены');
-                alert('Города не найдены');
+                alert('Города не найдены в базе данных');
             }
         } catch (error) {
             console.error('Ошибка загрузки городов:', error);
-            alert('Ошибка загрузки городов');
+            console.error('Детали ошибки:', {
+                message: error.message,
+                code: error.code,
+                response: error.response
+            });
+            alert(`Ошибка загрузки городов: ${error.message}`);
         }
     }
 
