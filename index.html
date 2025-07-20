@@ -9,20 +9,22 @@
 </head>
 <body>
     <header>
-        <h1>Ввод показаний счетчиков</h1>
+        <h1>📝 Ввод показаний счетчиков</h1>
         <nav>
-            <a href="history.html" class="nav-link nav-link-light">История показаний</a>
-            <a href="tariffs.html" class="nav-link nav-link-light">Управление тарифами</a>
+            <a href="history.html" class="nav-link nav-link-light">📊 История показаний</a>
+            <a href="tariffs.html" class="nav-link nav-link-light">💰 Управление тарифами</a>
         </nav>
     </header>
     <main>
         <!-- Фильтр для выбора города -->
-        <div class="filter">
-            <label for="citySelect">Выберите город:</label>
-            <div class="city-select-wrapper">
-                <select id="citySelect" class="city-select">
-                    <!-- Опции будут добавлены через JavaScript -->
-                </select>
+        <div class="filter-container">
+            <div class="filter-row">
+                <div class="filter-item">
+                    <label for="citySelect">Выберите город:</label>
+                    <select id="citySelect" class="filter-select">
+                        <!-- Опции будут добавлены через JavaScript -->
+                    </select>
+                </div>
             </div>
         </div>
         <!-- Контейнер для таблицы -->
