@@ -36,7 +36,7 @@ async function createCities() {
             const response = await databases.createDocument(
                 APPWRITE_CONFIG.databaseId,
                 APPWRITE_CONFIG.collections.cities,
-                ID.unique(),
+                Appwrite.ID.unique(),
                 city
             );
             createdCities.push(response);
@@ -59,7 +59,7 @@ async function createMeterTypes() {
             const response = await databases.createDocument(
                 APPWRITE_CONFIG.databaseId,
                 APPWRITE_CONFIG.collections.meterTypes,
-                ID.unique(),
+                Appwrite.ID.unique(),
                 meterType
             );
             createdTypes.push(response);
@@ -91,7 +91,7 @@ async function createSampleMeters(cities, meterTypes) {
                 const response = await databases.createDocument(
                     APPWRITE_CONFIG.databaseId,
                     APPWRITE_CONFIG.collections.meters,
-                    ID.unique(),
+                    Appwrite.ID.unique(),
                     meterData
                 );
                 
@@ -130,7 +130,7 @@ async function createSampleTariffs(cities, meterTypes) {
                 const response = await databases.createDocument(
                     APPWRITE_CONFIG.databaseId,
                     APPWRITE_CONFIG.collections.tariffs,
-                    ID.unique(),
+                    Appwrite.ID.unique(),
                     tariffData
                 );
                 

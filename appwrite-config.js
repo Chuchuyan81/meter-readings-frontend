@@ -16,11 +16,11 @@ let databases;
 
 function initAppwrite() {
     try {
-        client = new Client()
+        client = new Appwrite.Client()
             .setEndpoint(APPWRITE_ENDPOINT)
             .setProject(APPWRITE_PROJECT_ID);
         
-        databases = new Databases(client);
+        databases = new Appwrite.Databases(client);
         console.log('Appwrite клиент инициализирован');
         return true;
     } catch (error) {

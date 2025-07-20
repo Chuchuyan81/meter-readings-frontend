@@ -94,8 +94,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 APPWRITE_CONFIG.databaseId,
                 APPWRITE_CONFIG.collections.meters,
                 [
-                    Query.equal('city_id', cityId),
-                    Query.equal('meter_type_id', meterTypeId)
+                    Appwrite.Query.equal('city_id', cityId),
+                    Appwrite.Query.equal('meter_type_id', meterTypeId)
                 ]
             );
 
@@ -111,10 +111,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 APPWRITE_CONFIG.databaseId,
                 APPWRITE_CONFIG.collections.meterReadings,
                 [
-                    Query.equal('meter_id', meterIds),
-                    Query.greaterThanEqual('reading_date', fromDate),
-                    Query.lessThanEqual('reading_date', toDate),
-                    Query.orderDesc('reading_date')
+                    Appwrite.Query.equal('meter_id', meterIds),
+                    Appwrite.Query.greaterThanEqual('reading_date', fromDate),
+                    Appwrite.Query.lessThanEqual('reading_date', toDate),
+                    Appwrite.Query.orderDesc('reading_date')
                 ]
             );
 

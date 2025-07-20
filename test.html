@@ -313,8 +313,8 @@
         // Инициализация клиента
         function initAppwrite() {
             try {
-                client = new Client();
-                databases = new Databases(client);
+                client = new Appwrite.Client();
+                databases = new Appwrite.Databases(client);
                 
                 client
                     .setEndpoint(APPWRITE_CONFIG.endpoint)
@@ -511,7 +511,7 @@
                 testDocument = await databases.createDocument(
                     APPWRITE_CONFIG.databaseId,
                     APPWRITE_CONFIG.collections.cities,
-                    ID.unique(),
+                    Appwrite.ID.unique(),
                     testData
                 );
                 
@@ -607,7 +607,7 @@
                 const metersResponse = await databases.listDocuments(
                     APPWRITE_CONFIG.databaseId,
                     APPWRITE_CONFIG.collections.meters,
-                    [Query.limit(1)]
+                    [Appwrite.Query.limit(1)]
                 );
                 
                 if (metersResponse.documents.length === 0) {
@@ -628,7 +628,7 @@
                 const reading = await databases.createDocument(
                     APPWRITE_CONFIG.databaseId,
                     APPWRITE_CONFIG.collections.meterReadings,
-                    ID.unique(),
+                    Appwrite.ID.unique(),
                     readingData
                 );
                 
@@ -667,7 +667,7 @@
                 const tariffsResponse = await databases.listDocuments(
                     APPWRITE_CONFIG.databaseId,
                     APPWRITE_CONFIG.collections.tariffs,
-                    [Query.limit(1)]
+                    [Appwrite.Query.limit(1)]
                 );
                 
                 if (tariffsResponse.documents.length === 0) {
@@ -694,7 +694,7 @@
                 const readingsResponse = await databases.listDocuments(
                     APPWRITE_CONFIG.databaseId,
                     APPWRITE_CONFIG.collections.meterReadings,
-                    [Query.limit(10)]
+                    [Appwrite.Query.limit(10)]
                 );
                 
                 log(`✅ История сгенерирована: найдено ${readingsResponse.documents.length} записей`);
@@ -744,7 +744,7 @@
                         await databases.listDocuments(
                             APPWRITE_CONFIG.databaseId,
                             id,
-                            [Query.limit(1)]
+                            [Appwrite.Query.limit(1)]
                         );
                         accessibleCollections++;
                     } catch (error) {
