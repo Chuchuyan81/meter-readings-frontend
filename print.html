@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Справка о расходовании воды</title>
+    <title>Справка по показаниям счетчиков</title>
     <style>
         @media print {
             @page {
@@ -98,6 +98,7 @@
                 border: none;
                 border-radius: 4px;
                 cursor: pointer;
+                margin: 0 10px;
             }
 
             .print-btn:hover {
@@ -120,12 +121,12 @@
 <body>
     <div class="print-container">
         <div class="header">
-            <h2>Справка</h2>
+            <h2 class="bold">Справка</h2>
             <p>расходования холодной и горячей воды по приборам учёта</p>
         </div>
 
         <div class="address">
-            <p>ул. Котовского д.45 квартира № <span id="apartment" class="bold">73</span> за <span id="month" class="bold underline"></span> месяц <span id="year"></span> г.</p>
+            <p>ул. Котовского д.45 квартира № <span class="bold" id="apartment">73</span> за <span class="underline" id="month">январь</span> месяц <span class="underline" id="year">2025</span> г.</p>
         </div>
 
         <table>
@@ -140,15 +141,15 @@
             <tbody>
                 <tr>
                     <td>Холодная вода</td>
-                    <td id="cold-prev"></td>
-                    <td id="cold-current"></td>
-                    <td id="cold-total"></td>
+                    <td id="coldPrev">-</td>
+                    <td id="coldCurrent">-</td>
+                    <td id="coldTotal">-</td>
                 </tr>
                 <tr>
                     <td>Горячая вода</td>
-                    <td id="hot-prev"></td>
-                    <td id="hot-current"></td>
-                    <td id="hot-total"></td>
+                    <td id="hotPrev">-</td>
+                    <td id="hotCurrent">-</td>
+                    <td id="hotTotal">-</td>
                 </tr>
             </tbody>
         </table>
@@ -156,28 +157,50 @@
         <div class="signature">
             <p>Квартиросъемщик:_________________/__________________/</p>
         </div>
+    </div>
 
-        <div class="no-print">
-            <button class="print-btn" onclick="window.print()">Распечатать справку</button>
-        </div>
+    <div class="no-print">
+        <button class="print-btn" onclick="window.print()">Печать</button>
+        <button class="print-btn" onclick="window.close()">Закрыть</button>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Получаем параметры из URL
-            const params = new URLSearchParams(window.location.search);
-            
-            // Заполняем данные
-            document.getElementById('month').textContent = params.get('month') || '_____';
-            document.getElementById('year').textContent = params.get('year') || '_____';
-            
-            document.getElementById('cold-prev').textContent = params.get('coldPrev') || '';
-            document.getElementById('cold-current').textContent = params.get('coldCurrent') || '';
-            document.getElementById('cold-total').textContent = params.get('coldTotal') || '';
-            
-            document.getElementById('hot-prev').textContent = params.get('hotPrev') || '';
-            document.getElementById('hot-current').textContent = params.get('hotCurrent') || '';
-            document.getElementById('hot-total').textContent = params.get('hotTotal') || '';
+        // Получаем параметры из URL
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        // Заполняем данные
+        document.getElementById('apartment').textContent = urlParams.get('apartment') || '73';
+        document.getElementById('month').textContent = urlParams.get('month') || 'январь';
+        document.getElementById('year').textContent = urlParams.get('year') || '2025';
+        
+        // Данные холодной воды
+        const coldPrev = urlParams.get('coldPrev');
+        const coldCurrent = urlParams.get('coldCurrent');
+        const coldTotal = urlParams.get('coldTotal');
+        
+        if (coldPrev) document.getElementById('coldPrev').textContent = coldPrev;
+        if (coldCurrent) document.getElementById('coldCurrent').textContent = coldCurrent;
+        if (coldTotal) document.getElementById('coldTotal').textContent = coldTotal;
+        
+        // Данные горячей воды
+        const hotPrev = urlParams.get('hotPrev');
+        const hotCurrent = urlParams.get('hotCurrent');
+        const hotTotal = urlParams.get('hotTotal');
+        
+        if (hotPrev) document.getElementById('hotPrev').textContent = hotPrev;
+        if (hotCurrent) document.getElementById('hotCurrent').textContent = hotCurrent;
+        if (hotTotal) document.getElementById('hotTotal').textContent = hotTotal;
+        
+        console.log('Справка загружена с параметрами:', {
+            apartment: urlParams.get('apartment'),
+            month: urlParams.get('month'),
+            year: urlParams.get('year'),
+            coldPrev: coldPrev,
+            coldCurrent: coldCurrent,
+            coldTotal: coldTotal,
+            hotPrev: hotPrev,
+            hotCurrent: hotCurrent,
+            hotTotal: hotTotal
         });
     </script>
 </body>
