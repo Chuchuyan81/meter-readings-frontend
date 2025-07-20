@@ -132,9 +132,15 @@ async function testAppwriteConnection() {
             console.log('Используем существующую сессию');
         }
         
-        const response = await databases.list();
-        console.log('Подключение к Appwrite успешно');
-        return true;
+        // Проверяем подключение, пытаясь получить список городов
+        try {
+            const response = await databases.listDocuments(DATABASE_ID, CITIES_COLLECTION_ID);
+            console.log('Подключение к Appwrite успешно');
+            return true;
+        } catch (dbError) {
+            console.error('Ошибка доступа к базе данных:', dbError);
+            return false;
+        }
     } catch (error) {
         console.error('Ошибка подключения к Appwrite:', error);
         return false;

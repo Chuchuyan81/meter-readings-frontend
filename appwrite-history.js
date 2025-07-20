@@ -1,29 +1,37 @@
 // Инициализация Appwrite
-const { Client, Databases, Query } = Appwrite;
+document.addEventListener('DOMContentLoaded', async function () {
+    // Инициализируем Appwrite
+    if (!initAppwrite()) {
+        console.error('Не удалось инициализировать Appwrite');
+        return;
+    }
 
-const client = new Client();
-const databases = new Databases(client);
+    // Проверяем подключение и создаем сессию
+    const connectionResult = await testAppwriteConnection();
+    if (!connectionResult) {
+        console.error('Не удалось подключиться к Appwrite');
+        alert('Ошибка подключения к базе данных');
+        return;
+    }
 
-// Настройка клиента
-client
-    .setEndpoint(APPWRITE_CONFIG.endpoint)
-    .setProject(APPWRITE_CONFIG.projectId);
+    console.log('Appwrite подключен успешно');
 
-document.addEventListener('DOMContentLoaded', function () {
+    // Импортируем Query из Appwrite
+    const { Query } = Appwrite;
     const citySelect = document.getElementById('citySelect');
-    const meterTypeSelect = document.getElementById('meterTypeSelect');
-    const fromDateInput = document.getElementById('fromDate');
-    const toDateInput = document.getElementById('toDate');
-    const loadHistoryButton = document.getElementById('loadHistoryButton');
+    const resourceTypeSelect = document.getElementById('resourceType');
+    const fromDateInput = document.getElementById('dateFrom');
+    const toDateInput = document.getElementById('dateTo');
+    const showButton = document.getElementById('showButton');
     const historyTableBody = document.getElementById('historyTableBody');
-    const historyTable = document.querySelector('.history-table');
+    const historyTable = document.querySelector('.meter-table');
 
     // Функция для получения списка городов
     async function fetchCities() {
         try {
             const response = await databases.listDocuments(
-                APPWRITE_CONFIG.databaseId,
-                APPWRITE_CONFIG.collections.cities
+                DATABASE_ID,
+                CITIES_COLLECTION_ID
             );
             
             const cities = response.documents;
@@ -56,14 +64,14 @@ document.addEventListener('DOMContentLoaded', function () {
     async function fetchMeterTypes() {
         try {
             const response = await databases.listDocuments(
-                APPWRITE_CONFIG.databaseId,
-                APPWRITE_CONFIG.collections.meterTypes
+                DATABASE_ID,
+                METER_TYPES_COLLECTION_ID
             );
             
             const meterTypes = response.documents;
             
             // Очищаем список перед добавлением новых опций
-            meterTypeSelect.innerHTML = '';
+            resourceTypeSelect.innerHTML = '';
 
             // Добавляем опцию по умолчанию
             const defaultOption = document.createElement('option');
@@ -71,14 +79,14 @@ document.addEventListener('DOMContentLoaded', function () {
             defaultOption.textContent = 'Выберите тип счетчика';
             defaultOption.disabled = true;
             defaultOption.selected = true;
-            meterTypeSelect.appendChild(defaultOption);
+            resourceTypeSelect.appendChild(defaultOption);
 
             // Добавляем типы счетчиков в список
             meterTypes.forEach(meterType => {
                 const option = document.createElement('option');
                 option.value = meterType.$id;
                 option.textContent = meterType.name;
-                meterTypeSelect.appendChild(option);
+                resourceTypeSelect.appendChild(option);
             });
         } catch (error) {
             console.error('Ошибка загрузки типов счетчиков:', error);
@@ -91,8 +99,8 @@ document.addEventListener('DOMContentLoaded', function () {
         try {
             // Получаем все счетчики для выбранного города и типа
             const metersResponse = await databases.listDocuments(
-                APPWRITE_CONFIG.databaseId,
-                APPWRITE_CONFIG.collections.meters,
+                DATABASE_ID,
+                METERS_COLLECTION_ID,
                 [
                     Query.equal('city_id', cityId),
                     Query.equal('meter_type_id', meterTypeId)
@@ -108,8 +116,8 @@ document.addEventListener('DOMContentLoaded', function () {
             // Получаем все показания для этих счетчиков в указанном диапазоне дат
             const meterIds = meters.map(meter => meter.$id);
             const readingsResponse = await databases.listDocuments(
-                APPWRITE_CONFIG.databaseId,
-                APPWRITE_CONFIG.collections.meterReadings,
+                DATABASE_ID,
+                METER_READINGS_COLLECTION_ID,
                 [
                     Query.equal('meter_id', meterIds),
                     Query.greaterThanEqual('reading_date', fromDate),
@@ -205,10 +213,10 @@ document.addEventListener('DOMContentLoaded', function () {
         historyTableHead.classList.add(`city-${colorIndex}`);
     }
 
-    // Обработчик для кнопки "Загрузить историю"
-    loadHistoryButton.addEventListener('click', async function () {
+    // Обработчик для кнопки "Показать"
+    showButton.addEventListener('click', async function () {
         const cityId = citySelect.value;
-        const meterTypeId = meterTypeSelect.value;
+        const meterTypeId = resourceTypeSelect.value;
         const fromDate = fromDateInput.value;
         const toDate = toDateInput.value;
 
@@ -223,8 +231,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         try {
-            loadHistoryButton.disabled = true;
-            loadHistoryButton.textContent = 'Загрузка...';
+            showButton.disabled = true;
+            showButton.textContent = 'Загрузка...';
             
             const history = await fetchMeterHistory(cityId, meterTypeId, fromDate, toDate);
             renderHistoryTable(history);
@@ -233,8 +241,8 @@ document.addEventListener('DOMContentLoaded', function () {
             console.error('Ошибка загрузки истории:', error);
             alert('Ошибка загрузки истории показаний');
         } finally {
-            loadHistoryButton.disabled = false;
-            loadHistoryButton.textContent = 'Загрузить историю';
+            showButton.disabled = false;
+            showButton.textContent = 'Показать';
         }
     });
 
@@ -242,8 +250,44 @@ document.addEventListener('DOMContentLoaded', function () {
     citySelect.addEventListener('change', function () {
         const cityId = citySelect.value;
         if (cityId) {
+            // Активируем поле выбора типа ресурса
+            resourceTypeSelect.disabled = false;
+            // Активируем поля дат
+            fromDateInput.disabled = false;
+            toDateInput.disabled = false;
             updateTableHeaderColor(cityId);
+        } else {
+            // Деактивируем поля если город не выбран
+            resourceTypeSelect.disabled = true;
+            fromDateInput.disabled = true;
+            toDateInput.disabled = true;
+            showButton.disabled = true;
         }
+    });
+
+    // Обработчик изменения типа ресурса
+    resourceTypeSelect.addEventListener('change', function () {
+        const meterTypeId = resourceTypeSelect.value;
+        if (meterTypeId) {
+            // Активируем кнопку показать
+            showButton.disabled = false;
+        } else {
+            // Деактивируем кнопку если тип ресурса не выбран
+            showButton.disabled = true;
+        }
+    });
+
+    // Инициализация календаря
+    flatpickr(fromDateInput, {
+        locale: 'ru',
+        dateFormat: 'Y-m-d',
+        allowInput: true
+    });
+    
+    flatpickr(toDateInput, {
+        locale: 'ru',
+        dateFormat: 'Y-m-d',
+        allowInput: true
     });
 
     // Установка дат по умолчанию

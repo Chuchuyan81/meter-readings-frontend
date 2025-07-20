@@ -1,15 +1,23 @@
 // Инициализация Appwrite
-const { Client, Databases, Query, ID } = Appwrite;
+document.addEventListener('DOMContentLoaded', async function () {
+    // Инициализируем Appwrite
+    if (!initAppwrite()) {
+        console.error('Не удалось инициализировать Appwrite');
+        return;
+    }
 
-const client = new Client();
-const databases = new Databases(client);
+    // Проверяем подключение и создаем сессию
+    const connectionResult = await testAppwriteConnection();
+    if (!connectionResult) {
+        console.error('Не удалось подключиться к Appwrite');
+        alert('Ошибка подключения к базе данных');
+        return;
+    }
 
-// Настройка клиента
-client
-    .setEndpoint(APPWRITE_CONFIG.endpoint)
-    .setProject(APPWRITE_CONFIG.projectId);
+    console.log('Appwrite подключен успешно');
 
-document.addEventListener('DOMContentLoaded', function () {
+    // Импортируем необходимые классы из Appwrite
+    const { Query, ID } = Appwrite;
     const citySelect = document.getElementById('citySelect');
     const meterTypeSelect = document.getElementById('meterTypeSelect');
     const tariffInput = document.getElementById('tariffInput');
@@ -21,8 +29,8 @@ document.addEventListener('DOMContentLoaded', function () {
     async function fetchCities() {
         try {
             const response = await databases.listDocuments(
-                APPWRITE_CONFIG.databaseId,
-                APPWRITE_CONFIG.collections.cities
+                DATABASE_ID,
+                CITIES_COLLECTION_ID
             );
             
             const cities = response.documents;
@@ -55,8 +63,8 @@ document.addEventListener('DOMContentLoaded', function () {
     async function fetchMeterTypes() {
         try {
             const response = await databases.listDocuments(
-                APPWRITE_CONFIG.databaseId,
-                APPWRITE_CONFIG.collections.meterTypes
+                DATABASE_ID,
+                METER_TYPES_COLLECTION_ID
             );
             
             const meterTypes = response.documents;
@@ -89,8 +97,8 @@ document.addEventListener('DOMContentLoaded', function () {
     async function fetchAllTariffs() {
         try {
             const response = await databases.listDocuments(
-                APPWRITE_CONFIG.databaseId,
-                APPWRITE_CONFIG.collections.tariffs,
+                DATABASE_ID,
+                TARIFFS_COLLECTION_ID,
                 [Query.orderDesc('start_date')]
             );
             
@@ -98,13 +106,13 @@ document.addEventListener('DOMContentLoaded', function () {
             
             // Получаем информацию о городах и типах счетчиков
             const cities = await databases.listDocuments(
-                APPWRITE_CONFIG.databaseId,
-                APPWRITE_CONFIG.collections.cities
+                DATABASE_ID,
+                CITIES_COLLECTION_ID
             );
             
             const meterTypes = await databases.listDocuments(
-                APPWRITE_CONFIG.databaseId,
-                APPWRITE_CONFIG.collections.meterTypes
+                DATABASE_ID,
+                METER_TYPES_COLLECTION_ID
             );
             
             // Создаем карты для быстрого поиска
@@ -190,8 +198,8 @@ document.addEventListener('DOMContentLoaded', function () {
             
             // Ищем активный тариф для данного города и типа счетчика
             const activeResponse = await databases.listDocuments(
-                APPWRITE_CONFIG.databaseId,
-                APPWRITE_CONFIG.collections.tariffs,
+                DATABASE_ID,
+                TARIFFS_COLLECTION_ID,
                 [
                     Query.equal('city_id', cityId),
                     Query.equal('meter_type_id', meterTypeId),
@@ -203,8 +211,8 @@ document.addEventListener('DOMContentLoaded', function () {
             if (activeResponse.documents.length > 0) {
                 const activeTariff = activeResponse.documents[0];
                 await databases.updateDocument(
-                    APPWRITE_CONFIG.databaseId,
-                    APPWRITE_CONFIG.collections.tariffs,
+                    DATABASE_ID,
+                    TARIFFS_COLLECTION_ID,
                     activeTariff.$id,
                     {
                         end_date: currentDate
@@ -214,8 +222,8 @@ document.addEventListener('DOMContentLoaded', function () {
             
             // Создаем новый тариф
             await databases.createDocument(
-                APPWRITE_CONFIG.databaseId,
-                APPWRITE_CONFIG.collections.tariffs,
+                DATABASE_ID,
+                TARIFFS_COLLECTION_ID,
                 ID.unique(),
                 {
                     city_id: cityId,
