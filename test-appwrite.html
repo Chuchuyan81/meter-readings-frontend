@@ -3,49 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Тест подключения к Appwrite</title>
+    <title>Тест Appwrite</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             max-width: 800px;
-            margin: 0 auto;
+            margin: 50px auto;
             padding: 20px;
         }
-        .test-section {
-            margin: 20px 0;
-            padding: 15px;
-            border: 1px solid #ddd;
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
             border-radius: 5px;
         }
-        .success {
-            background-color: #d4edda;
-            border-color: #c3e6cb;
-            color: #155724;
-        }
-        .error {
-            background-color: #f8d7da;
-            border-color: #f5c6cb;
-            color: #721c24;
-        }
-        .info {
-            background-color: #d1ecf1;
-            border-color: #bee5eb;
-            color: #0c5460;
-        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
         button {
-            background-color: #007bff;
-            color: white;
-            border: none;
             padding: 10px 20px;
+            margin: 5px;
+            border: none;
             border-radius: 5px;
             cursor: pointer;
-            margin: 5px;
+            background: #007bff;
+            color: white;
         }
-        button:hover {
-            background-color: #0056b3;
-        }
+        button:hover { background: #0056b3; }
         pre {
-            background-color: #f8f9fa;
+            background: #f8f9fa;
             padding: 10px;
             border-radius: 5px;
             overflow-x: auto;
@@ -53,157 +38,78 @@
     </style>
 </head>
 <body>
-    <h1>Тест подключения к Appwrite</h1>
+    <h1>🧪 Тест инициализации Appwrite</h1>
     
-    <div class="test-section info">
-        <h3>Информация о подключении</h3>
-        <p><strong>Endpoint:</strong> https://cloud.appwrite.io/v1</p>
-        <p><strong>Project ID:</strong> 68790cc0001f9d5ee482</p>
-        <p><strong>Database ID:</strong> meter_readings_db</p>
+    <div id="config-info" class="test-result info">
+        <h3>Конфигурация:</h3>
+        <pre id="config-display"></pre>
     </div>
-
-    <div class="test-section">
-        <h3>Тест 1: Инициализация клиента</h3>
-        <button onclick="testClientInit()">Проверить инициализацию</button>
-        <div id="clientInitResult"></div>
+    
+    <div>
+        <button onclick="testInit()">Тест инициализации</button>
+        <button onclick="testConnection()">Тест подключения</button>
+        <button onclick="clearResults()">Очистить результаты</button>
     </div>
+    
+    <div id="results"></div>
 
-    <div class="test-section">
-        <h3>Тест 2: Подключение к базе данных</h3>
-        <button onclick="testDatabaseConnection()">Проверить подключение к БД</button>
-        <div id="dbConnectionResult"></div>
-    </div>
-
-    <div class="test-section">
-        <h3>Тест 3: Загрузка городов</h3>
-        <button onclick="testLoadCities()">Загрузить города</button>
-        <div id="citiesResult"></div>
-    </div>
-
-    <div class="test-section">
-        <h3>Тест 4: Загрузка типов счетчиков</h3>
-        <button onclick="testLoadMeterTypes()">Загрузить типы счетчиков</button>
-        <div id="meterTypesResult"></div>
-    </div>
-
-    <div class="test-section">
-        <h3>Тест 5: Загрузка счетчиков</h3>
-        <button onclick="testLoadMeters()">Загрузить счетчики</button>
-        <div id="metersResult"></div>
-    </div>
-
-    <div class="test-section">
-        <h3>Тест 6: Загрузка тарифов</h3>
-        <button onclick="testLoadTariffs()">Загрузить тарифы</button>
-        <div id="tariffsResult"></div>
-    </div>
-
-    <div class="test-section">
-        <h3>Тест 7: Загрузка показаний</h3>
-        <button onclick="testLoadReadings()">Загрузить показания</button>
-        <div id="readingsResult"></div>
-    </div>
-
-    <!-- Appwrite SDK -->
-    <script src="https://cdn.jsdelivr.net/npm/appwrite@11.0.0"></script>
-    <!-- Конфигурация Appwrite -->
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@15.0.0"></script>
+    <script src="config.js"></script>
     <script src="appwrite-config.js"></script>
-
+    
     <script>
-        let client, databases;
-
-        function showResult(elementId, message, isSuccess = true) {
-            const element = document.getElementById(elementId);
-            element.innerHTML = `<pre>${message}</pre>`;
-            element.className = isSuccess ? 'success' : 'error';
+        // Отображение конфигурации
+        document.getElementById('config-display').textContent = 
+            JSON.stringify(APPWRITE_CONFIG, null, 2);
+        
+        function addResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = `<strong>[${new Date().toLocaleTimeString()}]</strong> ${message}`;
+            results.appendChild(div);
         }
-
-        async function testClientInit() {
+        
+        function testInit() {
+            addResult('🔌 Тестирование инициализации Appwrite...', 'info');
+            
             try {
-                if (initAppwrite()) {
-                    showResult('clientInitResult', '✅ Клиент Appwrite успешно инициализирован');
+                const result = initAppwrite();
+                if (result) {
+                    addResult('✅ Инициализация Appwrite прошла успешно!', 'success');
                 } else {
-                    showResult('clientInitResult', '❌ Ошибка инициализации клиента Appwrite', false);
+                    addResult('❌ Ошибка инициализации Appwrite', 'error');
                 }
             } catch (error) {
-                showResult('clientInitResult', `❌ Ошибка: ${error.message}`, false);
+                addResult(`❌ Ошибка инициализации: ${error.message}`, 'error');
+                console.error('Ошибка инициализации:', error);
             }
         }
-
-        async function testDatabaseConnection() {
+        
+        async function testConnection() {
+            addResult('🔌 Тестирование подключения к Appwrite...', 'info');
+            
             try {
+                if (!initAppwrite()) {
+                    throw new Error('Не удалось инициализировать Appwrite');
+                }
+                
+                // Простая проверка - попытка получить список баз данных
                 const response = await databases.list();
-                showResult('dbConnectionResult', `✅ Подключение к базе данных успешно\nНайдено баз данных: ${response.databases.length}\n\nДанные:\n${JSON.stringify(response, null, 2)}`);
+                addResult(`✅ Подключение успешно! Найдено баз данных: ${response.databases.length}`, 'success');
             } catch (error) {
-                showResult('dbConnectionResult', `❌ Ошибка подключения к базе данных: ${error.message}`, false);
+                addResult(`❌ Ошибка подключения: ${error.message}`, 'error');
+                console.error('Ошибка подключения:', error);
             }
         }
-
-        async function testLoadCities() {
-            try {
-                const response = await databases.listDocuments(
-                    DATABASE_ID,
-                    CITIES_COLLECTION_ID
-                );
-                showResult('citiesResult', `✅ Города загружены успешно\nКоличество: ${response.total}\n\nДанные:\n${JSON.stringify(response.documents, null, 2)}`);
-            } catch (error) {
-                showResult('citiesResult', `❌ Ошибка загрузки городов: ${error.message}`, false);
-            }
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
         }
-
-        async function testLoadMeterTypes() {
-            try {
-                const response = await databases.listDocuments(
-                    DATABASE_ID,
-                    METER_TYPES_COLLECTION_ID
-                );
-                showResult('meterTypesResult', `✅ Типы счетчиков загружены успешно\nКоличество: ${response.total}\n\nДанные:\n${JSON.stringify(response.documents, null, 2)}`);
-            } catch (error) {
-                showResult('meterTypesResult', `❌ Ошибка загрузки типов счетчиков: ${error.message}`, false);
-            }
-        }
-
-        async function testLoadMeters() {
-            try {
-                const response = await databases.listDocuments(
-                    DATABASE_ID,
-                    METERS_COLLECTION_ID
-                );
-                showResult('metersResult', `✅ Счетчики загружены успешно\nКоличество: ${response.total}\n\nПервые 3 записи:\n${JSON.stringify(response.documents.slice(0, 3), null, 2)}`);
-            } catch (error) {
-                showResult('metersResult', `❌ Ошибка загрузки счетчиков: ${error.message}`, false);
-            }
-        }
-
-        async function testLoadTariffs() {
-            try {
-                const response = await databases.listDocuments(
-                    DATABASE_ID,
-                    TARIFFS_COLLECTION_ID
-                );
-                showResult('tariffsResult', `✅ Тарифы загружены успешно\nКоличество: ${response.total}\n\nПервые 3 записи:\n${JSON.stringify(response.documents.slice(0, 3), null, 2)}`);
-            } catch (error) {
-                showResult('tariffsResult', `❌ Ошибка загрузки тарифов: ${error.message}`, false);
-            }
-        }
-
-        async function testLoadReadings() {
-            try {
-                const response = await databases.listDocuments(
-                    DATABASE_ID,
-                    METER_READINGS_COLLECTION_ID
-                );
-                showResult('readingsResult', `✅ Показания загружены успешно\nКоличество: ${response.total}\n\nПервые 3 записи:\n${JSON.stringify(response.documents.slice(0, 3), null, 2)}`);
-            } catch (error) {
-                showResult('readingsResult', `❌ Ошибка загрузки показаний: ${error.message}`, false);
-            }
-        }
-
-        // Автоматический тест при загрузке страницы
-        window.addEventListener('load', function() {
-            setTimeout(() => {
-                testClientInit();
-            }, 1000);
+        
+        // Автоматический тест при загрузке
+        window.addEventListener('load', () => {
+            addResult('🚀 Страница загружена, готов к тестированию', 'info');
         });
     </script>
 </body>

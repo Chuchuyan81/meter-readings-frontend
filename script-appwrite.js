@@ -54,13 +54,13 @@ document.addEventListener('DOMContentLoaded', function () {
     // Функция для получения списка счетчиков по городу из Appwrite
     async function fetchMeters(cityId) {
         try {
-            const response = await databases.listDocuments(
-                DATABASE_ID,
-                METERS_COLLECTION_ID,
-                [
-                    Query.equal('city_id', cityId)
-                ]
-            );
+                            const response = await databases.listDocuments(
+                    DATABASE_ID,
+                    METERS_COLLECTION_ID,
+                    [
+                        Appwrite.Query.equal('city_id', cityId)
+                    ]
+                );
             
             if (response.documents && response.documents.length > 0) {
                 // Получаем типы счетчиков для отображения названий
@@ -79,8 +79,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     DATABASE_ID,
                     TARIFFS_COLLECTION_ID,
                     [
-                        Query.equal('city_id', cityId),
-                        Query.equal('end_date', '')
+                        Appwrite.Query.equal('city_id', cityId),
+                        Appwrite.Query.equal('end_date', '')
                     ]
                 );
 
@@ -231,7 +231,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     await databases.createDocument(
                         DATABASE_ID,
                         METER_READINGS_COLLECTION_ID,
-                        ID.unique(),
+                        Appwrite.ID.unique(),
                         {
                             meter_id: reading.meterId,
                             reading_date: new Date().toISOString().split('T')[0],

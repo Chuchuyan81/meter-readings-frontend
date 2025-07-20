@@ -322,7 +322,7 @@
                 hideMessages();
                 
                 // Создаем аккаунт
-                await account.create(ID.unique(), email, password, name);
+                await account.create(Appwrite.ID.unique(), email, password, name);
                 
                 // Автоматически входим
                 await account.createEmailPasswordSession(email, password);

@@ -73,7 +73,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const response = await databases.listDocuments(
                 APPWRITE_CONFIG.databaseId,
                 APPWRITE_CONFIG.collections.meters,
-                [Query.equal('city_id', cityId)]
+                [Appwrite.Query.equal('city_id', cityId)]
             );
             
             const meters = response.documents;
@@ -126,9 +126,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 APPWRITE_CONFIG.databaseId,
                 APPWRITE_CONFIG.collections.tariffs,
                 [
-                    Query.equal('city_id', cityId),
-                    Query.equal('meter_type_id', meterTypeId),
-                    Query.isNull('end_date')
+                    Appwrite.Query.equal('city_id', cityId),
+                    Appwrite.Query.equal('meter_type_id', meterTypeId),
+                    Appwrite.Query.isNull('end_date')
                 ]
             );
             
@@ -265,7 +265,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     await databases.createDocument(
                         APPWRITE_CONFIG.databaseId,
                         APPWRITE_CONFIG.collections.meterReadings,
-                        ID.unique(),
+                        Appwrite.ID.unique(),
                         reading
                     );
                     
