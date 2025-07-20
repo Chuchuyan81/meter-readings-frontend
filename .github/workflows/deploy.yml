@@ -22,7 +22,7 @@ jobs:
     - name: Create deployment directory
       run: |
         mkdir -p deploy
-        cp -r frontend/* deploy/
+        cp -r *.html *.js *.css deploy/
         
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
