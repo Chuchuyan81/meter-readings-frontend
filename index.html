@@ -72,5 +72,17 @@
     <script src="appwrite-config.js"></script>
     <!-- Основной скрипт -->
     <script src="script-appwrite.js"></script>
+    <!-- Инициализация приложения -->
+    <script>
+        // Проверяем загрузку Appwrite SDK
+        window.addEventListener('load', function() {
+            if (typeof Appwrite === 'undefined') {
+                alert('Ошибка загрузки Appwrite SDK');
+                console.error('Appwrite SDK не загружен');
+            } else {
+                console.log('Appwrite SDK загружен успешно');
+            }
+        });
+    </script>
 </body>
 </html>
