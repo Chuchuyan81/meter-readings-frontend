@@ -50,6 +50,23 @@ function initAppwrite() {
     }
 }
 
+// Функция для проверки существующей авторизации
+async function checkExistingSession() {
+    try {
+        if (!account) {
+            console.error('Account не инициализирован');
+            return false;
+        }
+        
+        const currentSession = await account.get();
+        console.log('Найдена активная сессия:', currentSession);
+        return true;
+    } catch (error) {
+        console.log('Активная сессия не найдена');
+        return false;
+    }
+}
+
 // Функция для анонимной авторизации
 async function createAnonymousSession() {
     try {
@@ -58,11 +75,41 @@ async function createAnonymousSession() {
             return false;
         }
         
+        // Проверяем, есть ли уже активная сессия
+        try {
+            const currentSession = await account.get();
+            console.log('Найдена активная сессия:', currentSession);
+            
+            // Если сессия существует, удаляем её
+            if (currentSession && currentSession.$id) {
+                console.log('Удаляем существующую сессию...');
+                await account.deleteSessions();
+                console.log('Существующая сессия удалена');
+            }
+        } catch (sessionError) {
+            console.log('Активная сессия не найдена, создаем новую...');
+        }
+        
+        // Создаем новую анонимную сессию
         const session = await account.createAnonymousSession();
         console.log('Анонимная сессия создана:', session);
         return true;
     } catch (error) {
         console.error('Ошибка создания анонимной сессии:', error);
+        
+        // Если ошибка связана с тем, что сессия уже активна, попробуем получить текущую сессию
+        if (error.message && error.message.includes('session is active')) {
+            try {
+                console.log('Попытка использовать существующую сессию...');
+                const currentSession = await account.get();
+                console.log('Используем существующую сессию:', currentSession);
+                return true;
+            } catch (getSessionError) {
+                console.error('Не удалось получить существующую сессию:', getSessionError);
+                return false;
+            }
+        }
+        
         return false;
     }
 }
@@ -70,11 +117,19 @@ async function createAnonymousSession() {
 // Проверка подключения к Appwrite
 async function testAppwriteConnection() {
     try {
-        // Сначала создаем анонимную сессию
-        const authResult = await createAnonymousSession();
+        // Сначала проверяем существующую сессию
+        let authResult = await checkExistingSession();
+        
+        // Если сессии нет, создаем новую
         if (!authResult) {
-            console.error('Не удалось создать анонимную сессию');
-            return false;
+            console.log('Создаем новую анонимную сессию...');
+            authResult = await createAnonymousSession();
+            if (!authResult) {
+                console.error('Не удалось создать анонимную сессию');
+                return false;
+            }
+        } else {
+            console.log('Используем существующую сессию');
         }
         
         const response = await databases.list();
@@ -86,10 +141,29 @@ async function testAppwriteConnection() {
     }
 }
 
+// Функция для очистки всех сессий
+async function clearAllSessions() {
+    try {
+        if (!account) {
+            console.error('Account не инициализирован');
+            return false;
+        }
+        
+        await account.deleteSessions();
+        console.log('Все сессии удалены');
+        return true;
+    } catch (error) {
+        console.error('Ошибка удаления сессий:', error);
+        return false;
+    }
+}
+
 // Делаем функции доступными глобально
 window.initAppwrite = initAppwrite;
 window.testAppwriteConnection = testAppwriteConnection;
 window.createAnonymousSession = createAnonymousSession;
+window.checkExistingSession = checkExistingSession;
+window.clearAllSessions = clearAllSessions;
 window.client = client;
 window.databases = databases;
 window.account = account; 

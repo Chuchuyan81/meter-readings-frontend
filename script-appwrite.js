@@ -36,15 +36,22 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             console.log('Appwrite инициализирован успешно');
             
-            // Создаем анонимную сессию
-            const authResult = await createAnonymousSession();
+            // Проверяем существующую сессию или создаем новую
+            let authResult = await checkExistingSession();
+            
             if (!authResult) {
-                console.error('Не удалось создать анонимную сессию');
-                alert('Ошибка авторизации. Проверьте консоль для деталей.');
-                return false;
+                console.log('Создаем новую анонимную сессию...');
+                authResult = await createAnonymousSession();
+                if (!authResult) {
+                    console.error('Не удалось создать анонимную сессию');
+                    alert('Ошибка авторизации. Проверьте консоль для деталей.');
+                    return false;
+                }
+            } else {
+                console.log('Используем существующую сессию');
             }
             
-            console.log('Анонимная авторизация выполнена успешно');
+            console.log('Авторизация выполнена успешно');
             return true;
         } catch (error) {
             console.error('Критическая ошибка инициализации Appwrite:', error);
