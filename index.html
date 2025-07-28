@@ -13,6 +13,13 @@
         <nav>
             <a href="history.html" class="nav-link nav-link-light">📊 История показаний</a>
             <a href="tariffs.html" class="nav-link nav-link-light">💰 Управление тарифами</a>
+            <a href="test-save.html" class="nav-link nav-link-light">🧪 Тест сохранения</a>
+            <a href="test-main.html" class="nav-link nav-link-light">🔍 Тест функциональности</a>
+            <a href="test-readings.html" class="nav-link nav-link-light">📋 Тест показаний</a>
+            <a href="debug-readings.html" class="nav-link nav-link-light">🔍 Отладка показаний</a>
+            <a href="test-simple.html" class="nav-link nav-link-light">🧪 Простой тест</a>
+            <a href="create-readings.html" class="nav-link nav-link-light">📝 Создать показания</a>
+            <a href="check-schema.html" class="nav-link nav-link-light">🔍 Проверить структуру</a>
         </nav>
     </header>
     <main>
@@ -78,11 +85,35 @@
     <script>
         // Проверяем загрузку Appwrite SDK
         window.addEventListener('load', function() {
+            console.log('=== ДИАГНОСТИКА ЗАГРУЗКИ ===');
+            console.log('Appwrite SDK загружен:', typeof Appwrite !== 'undefined');
+            
             if (typeof Appwrite === 'undefined') {
                 alert('Ошибка загрузки Appwrite SDK');
                 console.error('Appwrite SDK не загружен');
             } else {
                 console.log('Appwrite SDK загружен успешно');
+                console.log('Доступные классы:', Object.keys(Appwrite));
+            }
+            
+            // Проверяем константы
+            console.log('Проверка констант:');
+            console.log('DATABASE_ID:', typeof DATABASE_ID !== 'undefined' ? DATABASE_ID : 'НЕ ОПРЕДЕЛЕН');
+            console.log('CITIES_COLLECTION_ID:', typeof CITIES_COLLECTION_ID !== 'undefined' ? CITIES_COLLECTION_ID : 'НЕ ОПРЕДЕЛЕН');
+            console.log('METER_READINGS_COLLECTION_ID:', typeof METER_READINGS_COLLECTION_ID !== 'undefined' ? METER_READINGS_COLLECTION_ID : 'НЕ ОПРЕДЕЛЕН');
+            
+            // Проверяем текущий origin
+            console.log('Текущий origin:', window.location.origin);
+            console.log('Текущий URL:', window.location.href);
+            
+            // Проверяем, запущено ли приложение локально
+            const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            console.log('Запущено локально:', isLocalhost);
+            
+            if (!isLocalhost) {
+                console.warn('⚠️ ВНИМАНИЕ: Приложение запущено не локально!');
+                console.warn('Это может вызвать проблемы с CORS при работе с Appwrite.');
+                console.warn('Рекомендуется запускать через http://localhost:8081');
             }
         });
     </script>

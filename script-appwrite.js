@@ -218,22 +218,114 @@ document.addEventListener('DOMContentLoaded', function () {
                 
                 console.log('Карта тарифов:', tariffs);
 
-                // Формируем данные счетчиков
+                // Получаем последние показания из коллекции meter_readings
+                console.log('=== НАЧАЛО ЗАГРУЗКИ ПОКАЗАНИЙ ===');
+                console.log('Загрузка последних показаний из meter_readings...');
+                
+                // Получаем все показания
+                console.log('Запрос показаний из базы данных...');
+                try {
+                    const readingsResponse = await databases.listDocuments(
+                        DATABASE_ID,
+                        METER_READINGS_COLLECTION_ID
+                    );
+                    console.log('Показания получены, количество:', readingsResponse.documents ? readingsResponse.documents.length : 0);
+                    
+                    if (!readingsResponse.documents || readingsResponse.documents.length === 0) {
+                        console.log('⚠️ Показания не найдены, используем данные из meters');
+                        // Если показаний нет, используем данные из meters
+                        const allMeters = response.documents.map(meter => {
+                            const meterType = meterTypes[meter.meter_type_id] || 'Неизвестно';
+                            return {
+                                meter_id: meter.$id,
+                                meter_type: meterType,
+                                meter_type_id: meter.meter_type_id,
+                                prev_date: meter.prev_date,
+                                prev_reading: meter.prev_reading,
+                                current_tariff: tariffs[meter.meter_type_id] || 0
+                            };
+                        });
+                        
+                        metersData = allMeters;
+                        renderMeterTable(allMeters);
+                        return;
+                    }
+                } catch (error) {
+                    console.error('❌ Ошибка получения показаний:', error);
+                    console.log('Используем данные из meters');
+                    // При ошибке используем данные из meters
+                    const allMeters = response.documents.map(meter => {
+                        const meterType = meterTypes[meter.meter_type_id] || 'Неизвестно';
+                        return {
+                            meter_id: meter.$id,
+                            meter_type: meterType,
+                            meter_type_id: meter.meter_type_id,
+                            prev_date: meter.prev_date,
+                            prev_reading: meter.prev_reading,
+                            current_tariff: tariffs[meter.meter_type_id] || 0
+                        };
+                    });
+                    
+                    metersData = allMeters;
+                    renderMeterTable(allMeters);
+                    return;
+                }
+                
+                // Фильтруем показания только для счетчиков выбранного города
+                const cityMeterIds = response.documents.map(meter => meter.$id);
+                console.log('ID счетчиков города:', cityMeterIds);
+                
+                const cityReadings = readingsResponse.documents.filter(reading => 
+                    cityMeterIds.includes(reading.meter_id)
+                );
+                
+                console.log('Все показания:', readingsResponse.documents);
+                console.log('Показания для выбранного города:', cityReadings);
+                
+                // Детальная диагностика сопоставления
+                console.log('=== ДИАГНОСТИКА СОПОСТАВЛЕНИЯ ===');
+                readingsResponse.documents.forEach(reading => {
+                    const isInCity = cityMeterIds.includes(reading.meter_id);
+                    console.log(`Показание ${reading.$id}: meter_id=${reading.meter_id}, дата=${reading.reading_date}, значение=${reading.reading}, в городе=${isInCity}`);
+                });
+                
+                // Группируем показания по meter_id и находим последние
+                const latestReadings = {};
+                cityReadings.forEach(reading => {
+                    const meterId = reading.meter_id;
+                    if (!latestReadings[meterId] || new Date(reading.reading_date) > new Date(latestReadings[meterId].reading_date)) {
+                        latestReadings[meterId] = reading;
+                    }
+                });
+                
+                console.log('Последние показания по счетчикам:', latestReadings);
+
+                // Формируем данные счетчиков с последними показаниями
+                console.log('=== ОБРАБОТКА СЧЕТЧИКОВ ===');
                 const allMeters = response.documents.map(meter => {
                     const meterType = meterTypes[meter.meter_type_id] || 'Неизвестно';
-                    console.log(`Обработка счетчика: ID=${meter.$id}, meter_type_id=${meter.meter_type_id}, найденный тип=${meterType}, дата=${meter.prev_date}`);
+                    const latestReading = latestReadings[meter.$id];
+                    
+                    console.log(`\nОбработка счетчика: ID=${meter.$id}, meter_type_id=${meter.meter_type_id}, найденный тип=${meterType}`);
+                    console.log(`Данные из meters: дата=${meter.prev_date}, показание=${meter.prev_reading}`);
+                    console.log(`Последнее показание для счетчика ${meter.$id}:`, latestReading);
+                    
+                    const prevDate = latestReading ? latestReading.reading_date : meter.prev_date;
+                    const prevReading = latestReading ? latestReading.reading : meter.prev_reading;
+                    
+                    console.log(`Итоговые данные для счетчика ${meter.$id}: дата=${prevDate}, показание=${prevReading}`);
                     
                     return {
                         meter_id: meter.$id,
                         meter_type: meterType,
                         meter_type_id: meter.meter_type_id,
-                        prev_date: meter.prev_date,
-                        prev_reading: meter.prev_reading,
+                        prev_date: prevDate,
+                        prev_reading: prevReading,
                         current_tariff: tariffs[meter.meter_type_id] || 0
                     };
                 });
 
-                console.log('Все счетчики:', allMeters);
+                console.log('Все счетчики с последними показаниями:', allMeters);
 
                 // Группируем счетчики по типу и выбираем последние данные
                 const metersByType = {};
@@ -262,10 +354,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     console.log(`Тип ${typeId}: выбран счетчик с датой ${latestMeter.prev_date} из ${metersOfType.length} доступных`);
                 });
 
+                console.log('Последние данные счетчиков после сортировки:', latestMeters);
+
                 console.log('Последние данные счетчиков:', latestMeters);
 
                 metersData = latestMeters;
+                console.log('Данные сохранены в metersData, вызываем renderMeterTable...');
                 renderMeterTable(latestMeters);
+                console.log('Таблица отрендерена с обновленными данными');
             } else {
                 console.error('Счетчики не найдены для города ID:', cityId);
                 console.log('Попробуем загрузить все счетчики без фильтра...');
@@ -325,11 +421,18 @@ document.addEventListener('DOMContentLoaded', function () {
     // Функция для вывода счетчиков в таблицу
     function renderMeterTable(meters) {
         console.log('Рендеринг таблицы счетчиков:', meters);
+        console.log('Количество счетчиков для отображения:', meters.length);
         meterTableBody.innerHTML = '';
         const currentDate = new Date().toLocaleDateString('ru-RU');
         
         meters.forEach((meter, index) => {
-            console.log(`Рендеринг счетчика ${index + 1}:`, meter);
+            console.log(`Рендеринг счетчика ${index + 1}:`, {
+                id: meter.meter_id,
+                type: meter.meter_type,
+                prev_date: meter.prev_date,
+                prev_reading: meter.prev_reading,
+                tariff: meter.current_tariff
+            });
             
             const row = document.createElement('tr');
 
@@ -438,8 +541,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (readingsToSave.length > 0) {
             try {
+                console.log('Начинаем сохранение показаний:', readingsToSave);
+                
                 // Сохраняем показания в Appwrite
                 for (const reading of readingsToSave) {
+                    console.log('Сохраняем показание:', reading);
                     await databases.createDocument(
                         DATABASE_ID,
                         METER_READINGS_COLLECTION_ID,
@@ -451,13 +557,65 @@ document.addEventListener('DOMContentLoaded', function () {
                             created_at: new Date().toISOString()
                         }
                     );
+                    console.log('Показание сохранено:', reading.meterId);
+                }
+
+                console.log('Все показания сохранены, обновляем данные счетчиков...');
+                
+                // Обновляем данные счетчиков в коллекции meters
+                for (const reading of readingsToSave) {
+                    try {
+                        // Получаем текущие данные счетчика
+                        const meterData = await databases.getDocument(
+                            DATABASE_ID,
+                            METERS_COLLECTION_ID,
+                            reading.meterId
+                        );
+                        
+                        console.log('Текущие данные счетчика:', meterData);
+                        
+                        // Обновляем счетчик с новыми показаниями
+                        await databases.updateDocument(
+                            DATABASE_ID,
+                            METERS_COLLECTION_ID,
+                            reading.meterId,
+                            {
+                                prev_date: new Date().toISOString().split('T')[0],
+                                prev_reading: reading.reading
+                            }
+                        );
+                        
+                        console.log('Счетчик обновлен:', reading.meterId);
+                    } catch (updateError) {
+                        console.error('Ошибка обновления счетчика:', reading.meterId, updateError);
+                    }
                 }
 
                 alert('Показания успешно сохранены!');
                 
-                // Обновляем данные счетчиков
+                // Обновляем данные счетчиков и перерисовываем таблицу
                 if (selectedCityId) {
+                    console.log('Перезагружаем данные для города:', selectedCityId);
                     await fetchMeters(selectedCityId);
+                    
+                    // Очищаем поля ввода после успешного сохранения
+                    meterTableBody.querySelectorAll('.currentReading').forEach(input => {
+                        input.value = '';
+                    });
+                    
+                    // Очищаем расчеты
+                    meterTableBody.querySelectorAll('.consumption').forEach(cell => {
+                        cell.textContent = '0';
+                    });
+                    
+                    meterTableBody.querySelectorAll('.amount').forEach(cell => {
+                        cell.textContent = '0';
+                    });
+                    
+                    // Очищаем итоговую сумму
+                    totalAmountDiv.textContent = '';
+                    
+                    console.log('Таблица обновлена после сохранения');
                 }
             } catch (error) {
                 console.error('Ошибка сохранения показаний:', error);
@@ -474,7 +632,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 }
                 
-                alert('Ошибка сохранения показаний');
+                alert('Ошибка сохранения показаний: ' + error.message);
             }
         } else {
             alert('Нет данных для сохранения');
@@ -568,9 +726,17 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Инициализируем Appwrite и загружаем города
+    console.log('=== ИНИЦИАЛИЗАЦИЯ ПРИЛОЖЕНИЯ ===');
     initializeAppwrite().then(success => {
         if (success) {
+            console.log('✅ Appwrite инициализирован успешно, загружаем города...');
             fetchCities();
+        } else {
+            console.error('❌ Ошибка инициализации Appwrite');
+            alert('Ошибка инициализации Appwrite. Проверьте консоль для деталей.');
         }
+    }).catch(error => {
+        console.error('❌ Критическая ошибка при инициализации:', error);
+        alert(`Критическая ошибка: ${error.message}`);
     });
 }); 

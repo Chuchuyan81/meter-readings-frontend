@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест сохранения показаний</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .success {
+            color: #28a745;
+        }
+        .error {
+            color: #dc3545;
+        }
+        .info {
+            color: #17a2b8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Тест сохранения показаний счетчиков</h1>
+        
+        <div class="test-section">
+            <h3>Проверка подключения к Appwrite</h3>
+            <button onclick="testConnection()">Проверить подключение</button>
+            <div id="connectionLog" class="log"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Тест сохранения показаний</h3>
+            <p>Этот тест проверит, правильно ли сохраняются показания и обновляются ли данные в таблице.</p>
+            <button onclick="testSaveReadings()">Запустить тест сохранения</button>
+            <div id="saveLog" class="log"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Инструкции</h3>
+            <ol>
+                <li>Нажмите "Проверить подключение" для проверки связи с Appwrite</li>
+                <li>Если подключение успешно, нажмите "Запустить тест сохранения"</li>
+                <li>Проверьте логи для диагностики проблем</li>
+                <li>После теста перейдите на основную страницу и проверьте, обновились ли данные</li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- Appwrite SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@11.0.0"></script>
+    <!-- Конфигурация Appwrite -->
+    <script src="appwrite-config.js"></script>
+    
+    <script>
+        function log(elementId, message, type = 'info') {
+            const logElement = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info';
+            logElement.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        async function testConnection() {
+            log('connectionLog', 'Начинаем проверку подключения к Appwrite...');
+            
+            try {
+                // Инициализируем Appwrite
+                if (!initAppwrite()) {
+                    log('connectionLog', 'Ошибка инициализации Appwrite', 'error');
+                    return;
+                }
+                log('connectionLog', 'Appwrite инициализирован', 'success');
+                
+                // Проверяем авторизацию
+                let authResult = await checkExistingSession();
+                if (!authResult) {
+                    log('connectionLog', 'Создаем новую анонимную сессию...');
+                    authResult = await createAnonymousSession();
+                    if (!authResult) {
+                        log('connectionLog', 'Не удалось создать анонимную сессию', 'error');
+                        return;
+                    }
+                }
+                log('connectionLog', 'Авторизация выполнена успешно', 'success');
+                
+                // Проверяем доступ к базе данных
+                const response = await databases.listDocuments(DATABASE_ID, CITIES_COLLECTION_ID);
+                log('connectionLog', `Подключение успешно! Найдено городов: ${response.documents.length}`, 'success');
+                
+            } catch (error) {
+                log('connectionLog', `Ошибка подключения: ${error.message}`, 'error');
+            }
+        }
+
+        async function testSaveReadings() {
+            log('saveLog', 'Начинаем тест сохранения показаний...');
+            
+            try {
+                // Проверяем подключение
+                if (!initAppwrite()) {
+                    log('saveLog', 'Ошибка инициализации Appwrite', 'error');
+                    return;
+                }
+                
+                let authResult = await checkExistingSession();
+                if (!authResult) {
+                    authResult = await createAnonymousSession();
+                    if (!authResult) {
+                        log('saveLog', 'Не удалось авторизоваться', 'error');
+                        return;
+                    }
+                }
+                
+                log('saveLog', 'Авторизация выполнена', 'success');
+                
+                // Получаем список счетчиков
+                const metersResponse = await databases.listDocuments(DATABASE_ID, METERS_COLLECTION_ID);
+                log('saveLog', `Найдено счетчиков: ${metersResponse.documents.length}`, 'info');
+                
+                if (metersResponse.documents.length === 0) {
+                    log('saveLog', 'Нет счетчиков для тестирования', 'error');
+                    return;
+                }
+                
+                // Берем первый счетчик для теста
+                const testMeter = metersResponse.documents[0];
+                log('saveLog', `Тестируем счетчик: ${testMeter.$id}`, 'info');
+                
+                // Создаем тестовое показание
+                const testReading = {
+                    meter_id: testMeter.$id,
+                    reading_date: new Date().toISOString().split('T')[0],
+                    reading: Math.floor(Math.random() * 1000) + 100, // Случайное показание
+                    created_at: new Date().toISOString()
+                };
+                
+                log('saveLog', `Сохраняем тестовое показание: ${testReading.reading}`, 'info');
+                
+                // Сохраняем показание
+                const { ID } = Appwrite;
+                await databases.createDocument(
+                    DATABASE_ID,
+                    METER_READINGS_COLLECTION_ID,
+                    ID.unique(),
+                    testReading
+                );
+                
+                log('saveLog', 'Показание сохранено в коллекцию meter_readings', 'success');
+                
+                // Обновляем счетчик
+                await databases.updateDocument(
+                    DATABASE_ID,
+                    METERS_COLLECTION_ID,
+                    testMeter.$id,
+                    {
+                        prev_date: testReading.reading_date,
+                        prev_reading: testReading.reading
+                    }
+                );
+                
+                log('saveLog', 'Счетчик обновлен в коллекции meters', 'success');
+                
+                // Проверяем, что данные обновились
+                const updatedMeter = await databases.getDocument(
+                    DATABASE_ID,
+                    METERS_COLLECTION_ID,
+                    testMeter.$id
+                );
+                
+                log('saveLog', `Проверяем обновленные данные:`, 'info');
+                log('saveLog', `  - Дата: ${updatedMeter.prev_date}`, 'info');
+                log('saveLog', `  - Показание: ${updatedMeter.prev_reading}`, 'info');
+                
+                if (updatedMeter.prev_reading == testReading.reading) {
+                    log('saveLog', '✅ Тест успешно завершен! Данные обновились правильно', 'success');
+                } else {
+                    log('saveLog', '❌ Ошибка: данные не обновились', 'error');
+                }
+                
+            } catch (error) {
+                log('saveLog', `Ошибка теста: ${error.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html> 

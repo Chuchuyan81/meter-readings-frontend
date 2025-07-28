@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Отладка показаний</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+        .info { color: #17a2b8; }
+        .warning { color: #ffc107; }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .data-table th,
+        .data-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .data-table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+        .meters-data { background-color: #fff3cd; }
+        .readings-data { background-color: #d1ecf1; }
+        .final-data { background-color: #d4edda; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Отладка показаний</h1>
+        
+        <div class="test-section">
+            <h3>📊 Сравнение данных</h3>
+            <button onclick="compareData()">Сравнить данные Meters vs Meter Readings</button>
+            <div id="comparisonLog" class="log"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>📋 Результаты сравнения</h3>
+            <div id="comparisonTable"></div>
+        </div>
+    </div>
+
+    <!-- Appwrite SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@11.0.0"></script>
+    <!-- Конфигурация Appwrite -->
+    <script src="appwrite-config.js"></script>
+    
+    <script>
+        function log(elementId, message, type = 'info') {
+            const logElement = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : type === 'warning' ? 'warning' : 'info';
+            logElement.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        async function compareData() {
+            log('comparisonLog', '=== СРАВНЕНИЕ ДАННЫХ ===', 'info');
+            
+            try {
+                // Инициализируем Appwrite
+                if (!initAppwrite()) {
+                    log('comparisonLog', 'Ошибка инициализации Appwrite', 'error');
+                    return;
+                }
+                
+                let authResult = await checkExistingSession();
+                if (!authResult) {
+                    authResult = await createAnonymousSession();
+                    if (!authResult) {
+                        log('comparisonLog', 'Не удалось авторизоваться', 'error');
+                        return;
+                    }
+                }
+                
+                log('comparisonLog', 'Авторизация выполнена', 'success');
+                
+                // Получаем данные из Meters
+                const metersResponse = await databases.listDocuments(DATABASE_ID, METERS_COLLECTION_ID);
+                log('comparisonLog', `Загружено счетчиков: ${metersResponse.documents.length}`, 'info');
+                
+                // Получаем данные из Meter Readings
+                const readingsResponse = await databases.listDocuments(DATABASE_ID, METER_READINGS_COLLECTION_ID);
+                log('comparisonLog', `Загружено показаний: ${readingsResponse.documents.length}`, 'info');
+                
+                // Группируем показания по meter_id
+                const readingsByMeter = {};
+                readingsResponse.documents.forEach(reading => {
+                    if (!readingsByMeter[reading.meter_id]) {
+                        readingsByMeter[reading.meter_id] = [];
+                    }
+                    readingsByMeter[reading.meter_id].push(reading);
+                });
+                
+                // Находим последние показания для каждого счетчика
+                const latestReadings = {};
+                Object.keys(readingsByMeter).forEach(meterId => {
+                    const readings = readingsByMeter[meterId];
+                    const latest = readings.reduce((latest, current) => 
+                        new Date(current.reading_date) > new Date(latest.reading_date) ? current : latest
+                    );
+                    latestReadings[meterId] = latest;
+                });
+                
+                log('comparisonLog', `Найдено последних показаний: ${Object.keys(latestReadings).length}`, 'info');
+                
+                // Создаем таблицу сравнения
+                displayComparisonTable(metersResponse.documents, latestReadings);
+                
+            } catch (error) {
+                log('comparisonLog', `Ошибка: ${error.message}`, 'error');
+            }
+        }
+
+        function displayComparisonTable(meters, latestReadings) {
+            const container = document.getElementById('comparisonTable');
+            
+            let html = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID счетчика</th>
+                            <th>Тип счетчика</th>
+                            <th>Данные из Meters</th>
+                            <th>Последние показания</th>
+                            <th>Итоговые данные</th>
+                            <th>Статус</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            meters.forEach(meter => {
+                const latestReading = latestReadings[meter.$id];
+                const hasLatestReading = latestReading !== undefined;
+                const isUpdated = hasLatestReading && 
+                    (latestReading.reading_date !== meter.prev_date || 
+                     latestReading.reading !== meter.prev_reading);
+                
+                const finalDate = hasLatestReading ? latestReading.reading_date : meter.prev_date;
+                const finalReading = hasLatestReading ? latestReading.reading : meter.prev_reading;
+                
+                let status = '❌ Нет показаний';
+                let statusClass = 'error';
+                
+                if (hasLatestReading) {
+                    if (isUpdated) {
+                        status = '✅ Обновлено';
+                        statusClass = 'success';
+                    } else {
+                        status = 'ℹ️ Актуально';
+                        statusClass = 'info';
+                    }
+                }
+                
+                html += `
+                    <tr>
+                        <td>${meter.$id}</td>
+                        <td>${meter.meter_type_id}</td>
+                        <td class="meters-data">
+                            Дата: ${meter.prev_date}<br>
+                            Показание: ${meter.prev_reading}
+                        </td>
+                        <td class="readings-data">
+                            ${hasLatestReading ? 
+                                `Дата: ${latestReading.reading_date}<br>Показание: ${latestReading.reading}` : 
+                                'Нет данных'
+                            }
+                        </td>
+                        <td class="final-data">
+                            Дата: ${finalDate}<br>
+                            Показание: ${finalReading}
+                        </td>
+                        <td class="${statusClass}">${status}</td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table>';
+            container.innerHTML = html;
+            
+            log('comparisonLog', 'Таблица сравнения создана', 'success');
+        }
+
+        // Инициализация
+        window.addEventListener('load', async function() {
+            if (typeof Appwrite === 'undefined') {
+                log('comparisonLog', 'Appwrite SDK не загружен', 'error');
+                return;
+            }
+            
+            log('comparisonLog', 'Страница готова к отладке', 'success');
+        });
+    </script>
+</body>
+</html> 

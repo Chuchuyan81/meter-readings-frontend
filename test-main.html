@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест основной функциональности</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+        .info { color: #17a2b8; }
+        .warning { color: #ffc107; }
+        
+        .test-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-ok { background-color: #28a745; }
+        .status-error { background-color: #dc3545; }
+        .status-warning { background-color: #ffc107; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Тест основной функциональности</h1>
+        
+        <div class="test-section">
+            <h3>🔍 Диагностика окружения</h3>
+            <button onclick="runEnvironmentTest()">Запустить диагностику</button>
+            <div id="environmentLog" class="log"></div>
+        </div>
+        
+        <div class="test-grid">
+            <div class="test-section">
+                <h3>🏙️ Тест загрузки городов</h3>
+                <button onclick="testCitiesLoading()">Загрузить города</button>
+                <div id="citiesLog" class="log"></div>
+            </div>
+            
+            <div class="test-section">
+                <h3>📊 Тест загрузки счетчиков</h3>
+                <select id="testCitySelect">
+                    <option value="">Выберите город для теста</option>
+                </select>
+                <button onclick="testMetersLoading()">Загрузить счетчики</button>
+                <div id="metersLog" class="log"></div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>💾 Тест сохранения показаний</h3>
+            <div id="saveTestResults">
+                <p>Для тестирования сохранения:</p>
+                <ol>
+                    <li>Выберите город выше</li>
+                    <li>Загрузите счетчики</li>
+                    <li>Введите тестовые показания в таблицу</li>
+                    <li>Нажмите "Сохранить"</li>
+                </ol>
+            </div>
+            <div id="saveTestLog" class="log"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>📋 Статус тестов</h3>
+            <div id="testStatus">
+                <div><span class="status-indicator status-warning"></span>Окружение: <span id="envStatus">Не проверено</span></div>
+                <div><span class="status-indicator status-warning"></span>Города: <span id="citiesStatus">Не проверено</span></div>
+                <div><span class="status-indicator status-warning"></span>Счетчики: <span id="metersStatus">Не проверено</span></div>
+                <div><span class="status-indicator status-warning"></span>Сохранение: <span id="saveStatus">Не проверено</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Appwrite SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@11.0.0"></script>
+    <!-- Конфигурация Appwrite -->
+    <script src="appwrite-config.js"></script>
+    
+    <script>
+        let testResults = {
+            environment: false,
+            cities: false,
+            meters: false,
+            save: false
+        };
+
+        function log(elementId, message, type = 'info') {
+            const logElement = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : type === 'warning' ? 'warning' : 'info';
+            logElement.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        function updateStatus(testName, success, message) {
+            testResults[testName] = success;
+            const statusElement = document.getElementById(testName + 'Status');
+            const indicatorElement = statusElement.previousElementSibling;
+            
+            if (success) {
+                statusElement.textContent = '✅ ' + message;
+                indicatorElement.className = 'status-indicator status-ok';
+            } else {
+                statusElement.textContent = '❌ ' + message;
+                indicatorElement.className = 'status-indicator status-error';
+            }
+        }
+
+        async function runEnvironmentTest() {
+            log('environmentLog', '=== ДИАГНОСТИКА ОКРУЖЕНИЯ ===');
+            
+            // Проверяем Appwrite SDK
+            if (typeof Appwrite === 'undefined') {
+                log('environmentLog', '❌ Appwrite SDK не загружен', 'error');
+                updateStatus('environment', false, 'SDK не загружен');
+                return;
+            }
+            log('environmentLog', '✅ Appwrite SDK загружен', 'success');
+            
+            // Проверяем константы
+            const requiredConstants = ['DATABASE_ID', 'CITIES_COLLECTION_ID', 'METER_READINGS_COLLECTION_ID'];
+            let constantsOk = true;
+            
+            requiredConstants.forEach(constant => {
+                if (typeof window[constant] === 'undefined') {
+                    log('environmentLog', `❌ Константа ${constant} не определена`, 'error');
+                    constantsOk = false;
+                } else {
+                    log('environmentLog', `✅ Константа ${constant}: ${window[constant]}`, 'success');
+                }
+            });
+            
+            // Проверяем origin
+            const origin = window.location.origin;
+            log('environmentLog', `📍 Текущий origin: ${origin}`, 'info');
+            
+            const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            if (!isLocalhost) {
+                log('environmentLog', '⚠️ ВНИМАНИЕ: Не локальный сервер!', 'warning');
+                log('environmentLog', 'Это может вызвать проблемы с CORS', 'warning');
+            } else {
+                log('environmentLog', '✅ Локальный сервер', 'success');
+            }
+            
+            // Проверяем инициализацию Appwrite
+            try {
+                if (!initAppwrite()) {
+                    log('environmentLog', '❌ Ошибка инициализации Appwrite', 'error');
+                    updateStatus('environment', false, 'Ошибка инициализации');
+                    return;
+                }
+                log('environmentLog', '✅ Appwrite инициализирован', 'success');
+                
+                // Проверяем авторизацию
+                let authResult = await checkExistingSession();
+                if (!authResult) {
+                    log('environmentLog', 'Создаем новую анонимную сессию...', 'info');
+                    authResult = await createAnonymousSession();
+                    if (!authResult) {
+                        log('environmentLog', '❌ Не удалось создать сессию', 'error');
+                        updateStatus('environment', false, 'Ошибка авторизации');
+                        return;
+                    }
+                }
+                log('environmentLog', '✅ Авторизация выполнена', 'success');
+                
+                updateStatus('environment', true, 'Все проверки пройдены');
+                
+            } catch (error) {
+                log('environmentLog', `❌ Ошибка: ${error.message}`, 'error');
+                updateStatus('environment', false, error.message);
+            }
+        }
+
+        async function testCitiesLoading() {
+            log('citiesLog', '=== ТЕСТ ЗАГРУЗКИ ГОРОДОВ ===');
+            
+            try {
+                const response = await databases.listDocuments(DATABASE_ID, CITIES_COLLECTION_ID);
+                log('citiesLog', `✅ Загружено городов: ${response.documents.length}`, 'success');
+                
+                response.documents.forEach((city, index) => {
+                    log('citiesLog', `  ${index + 1}. ${city.name} (ID: ${city.$id})`, 'info');
+                });
+                
+                // Заполняем select для тестирования счетчиков
+                const citySelect = document.getElementById('testCitySelect');
+                citySelect.innerHTML = '<option value="">Выберите город для теста</option>';
+                response.documents.forEach(city => {
+                    const option = document.createElement('option');
+                    option.value = city.$id;
+                    option.textContent = city.name;
+                    citySelect.appendChild(option);
+                });
+                
+                updateStatus('cities', true, `${response.documents.length} городов загружено`);
+                
+            } catch (error) {
+                log('citiesLog', `❌ Ошибка загрузки городов: ${error.message}`, 'error');
+                updateStatus('cities', false, error.message);
+            }
+        }
+
+        async function testMetersLoading() {
+            const cityId = document.getElementById('testCitySelect').value;
+            if (!cityId) {
+                log('metersLog', '❌ Выберите город для тестирования', 'error');
+                return;
+            }
+            
+            log('metersLog', `=== ТЕСТ ЗАГРУЗКИ СЧЕТЧИКОВ ДЛЯ ГОРОДА ${cityId} ===`);
+            
+            try {
+                const response = await databases.listDocuments(DATABASE_ID, METERS_COLLECTION_ID);
+                log('metersLog', `✅ Всего счетчиков в базе: ${response.documents.length}`, 'success');
+                
+                // Фильтруем по городу (используем упрощенный ID)
+                const cityIndex = parseInt(cityId) || 1;
+                const cityMeters = response.documents.filter(meter => meter.city_id == cityIndex);
+                
+                log('metersLog', `✅ Счетчиков для города ${cityIndex}: ${cityMeters.length}`, 'success');
+                
+                cityMeters.forEach((meter, index) => {
+                    log('metersLog', `  ${index + 1}. Тип: ${meter.meter_type_id}, Показание: ${meter.prev_reading}, Дата: ${meter.prev_date}`, 'info');
+                });
+                
+                updateStatus('meters', true, `${cityMeters.length} счетчиков найдено`);
+                
+            } catch (error) {
+                log('metersLog', `❌ Ошибка загрузки счетчиков: ${error.message}`, 'error');
+                updateStatus('meters', false, error.message);
+            }
+        }
+
+        // Автоматически запускаем диагностику при загрузке
+        window.addEventListener('load', function() {
+            setTimeout(runEnvironmentTest, 1000);
+        });
+    </script>
+</body>
+</html> 
