@@ -26,6 +26,10 @@ document.addEventListener('DOMContentLoaded', async function () {
     const historyTableBody = document.getElementById('historyTableBody');
     const historyTable = document.querySelector('.meter-table');
 
+    // Карты соответствия: Appwrite ID -> простой ID (строкой), как используется в коллекциях
+    const citiesMap = {}; // city.$id -> '1' | '2' | '3' ...
+    const meterTypeIdToSimple = {}; // meter_type.$id -> '1' | '2' | '3' ...
+
     // Функция для получения списка городов
     async function fetchCities() {
         try {
@@ -47,12 +51,16 @@ document.addEventListener('DOMContentLoaded', async function () {
             defaultOption.selected = true;
             citySelect.appendChild(defaultOption);
 
-            // Добавляем города в список
-            cities.forEach(city => {
+            // Добавляем города в список и заполняем карту соответствия
+            cities.forEach((city, index) => {
                 const option = document.createElement('option');
                 option.value = city.$id;
                 option.textContent = city.name;
                 citySelect.appendChild(option);
+
+                // Простой ID города определяем по индексу, как в остальных частях приложения
+                const simpleCityId = String(index + 1);
+                citiesMap[city.$id] = simpleCityId;
             });
         } catch (error) {
             console.error('Ошибка загрузки городов:', error);
@@ -81,12 +89,15 @@ document.addEventListener('DOMContentLoaded', async function () {
             defaultOption.selected = true;
             resourceTypeSelect.appendChild(defaultOption);
 
-            // Добавляем типы счетчиков в список
-            meterTypes.forEach(meterType => {
+            // Добавляем типы счетчиков в список и заполняем карту соответствия
+            meterTypes.forEach((meterType, index) => {
                 const option = document.createElement('option');
                 option.value = meterType.$id;
                 option.textContent = meterType.name;
                 resourceTypeSelect.appendChild(option);
+
+                const simpleTypeId = String(index + 1);
+                meterTypeIdToSimple[meterType.$id] = simpleTypeId;
             });
         } catch (error) {
             console.error('Ошибка загрузки типов счетчиков:', error);
@@ -97,13 +108,21 @@ document.addEventListener('DOMContentLoaded', async function () {
     // Функция для получения истории показаний
     async function fetchMeterHistory(cityId, meterTypeId, fromDate, toDate) {
         try {
+            // Конвертируем Appwrite ID города и типа в простые ID, которые сохранены в коллекциях
+            const simpleCityId = citiesMap[cityId];
+            const simpleTypeId = meterTypeIdToSimple[meterTypeId];
+
+            if (!simpleCityId || !simpleTypeId) {
+                return [];
+            }
+
             // Получаем все счетчики для выбранного города и типа
             const metersResponse = await databases.listDocuments(
                 DATABASE_ID,
                 METERS_COLLECTION_ID,
                 [
-                    Query.equal('city_id', cityId),
-                    Query.equal('meter_type_id', meterTypeId)
+                    Query.equal('city_id', simpleCityId),
+                    Query.equal('meter_type_id', simpleTypeId)
                 ]
             );
 
