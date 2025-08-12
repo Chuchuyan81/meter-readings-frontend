@@ -224,14 +224,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 
                 // Получаем все показания
                 console.log('Запрос показаний из базы данных...');
+                let readings = [];
                 try {
-                    const readingsResponse = await databases.listDocuments(
+                    const resp = await databases.listDocuments(
                         DATABASE_ID,
                         METER_READINGS_COLLECTION_ID
                     );
-                    console.log('Показания получены, количество:', readingsResponse.documents ? readingsResponse.documents.length : 0);
-                    
-                    if (!readingsResponse.documents || readingsResponse.documents.length === 0) {
+                    const docs = resp.documents || [];
+                    console.log('Показания получены, количество:', docs.length);
+
+                    if (docs.length === 0) {
                         console.log('⚠️ Показания не найдены, используем данные из meters');
                         // Если показаний нет, используем данные из meters
                         const allMeters = response.documents.map(meter => {
@@ -245,11 +247,13 @@ document.addEventListener('DOMContentLoaded', function () {
                                 current_tariff: tariffs[meter.meter_type_id] || 0
                             };
                         });
-                        
+
                         metersData = allMeters;
                         renderMeterTable(allMeters);
                         return;
                     }
+
+                    readings = docs;
                 } catch (error) {
                     console.error('❌ Ошибка получения показаний:', error);
                     console.log('Используем данные из meters');
@@ -265,7 +269,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             current_tariff: tariffs[meter.meter_type_id] || 0
                         };
                     });
-                    
+
                     metersData = allMeters;
                     renderMeterTable(allMeters);
                     return;
@@ -275,16 +279,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 const cityMeterIds = response.documents.map(meter => meter.$id);
                 console.log('ID счетчиков города:', cityMeterIds);
                 
-                const cityReadings = readingsResponse.documents.filter(reading => 
+                const cityReadings = readings.filter(reading => 
                     cityMeterIds.includes(reading.meter_id)
                 );
                 
-                console.log('Все показания:', readingsResponse.documents);
+                console.log('Все показания:', readings);
                 console.log('Показания для выбранного города:', cityReadings);
                 
                 // Детальная диагностика сопоставления
                 console.log('=== ДИАГНОСТИКА СОПОСТАВЛЕНИЯ ===');
-                readingsResponse.documents.forEach(reading => {
+                readings.forEach(reading => {
                     const isInCity = cityMeterIds.includes(reading.meter_id);
                     console.log(`Показание ${reading.$id}: meter_id=${reading.meter_id}, дата=${reading.reading_date}, значение=${reading.reading}, в городе=${isInCity}`);
                 });
