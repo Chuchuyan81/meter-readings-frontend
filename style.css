@@ -595,6 +595,47 @@ main {
         padding: 1rem;
     }
 
+    /* Мобильная карточная раскладка таблицы */
+    .meter-table thead {
+        display: none;
+    }
+    .meter-table, .meter-table tbody, .meter-table tr, .meter-table td {
+        display: block;
+        width: 100%;
+    }
+    .meter-table tr {
+        margin-bottom: 12px;
+        border: 1px solid #eee;
+        border-radius: 8px;
+        padding: 8px;
+        background: #fff;
+    }
+    .meter-table td {
+        border: none;
+        border-bottom: 1px solid #f1f3f4;
+        position: relative;
+        padding-left: 50%;
+        min-height: 36px;
+    }
+    .meter-table td:last-child {
+        border-bottom: none;
+    }
+    .meter-table td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-weight: 600;
+        color: #666;
+        width: 45%;
+        white-space: nowrap;
+    }
+    .meter-table input[type="number"],
+    .meter-table input[type="text"] {
+        width: 100%;
+    }
+
     .meter-table,
     .tariffs-table {
         font-size: 0.7rem;

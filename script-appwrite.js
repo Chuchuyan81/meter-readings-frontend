@@ -232,7 +232,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     );
                     const docs = resp.documents || [];
                     console.log('Показания получены, количество:', docs.length);
-
+                    
                     if (docs.length === 0) {
                         console.log('⚠️ Показания не найдены, используем данные из meters');
                         // Если показаний нет, используем данные из meters
@@ -247,7 +247,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 current_tariff: tariffs[meter.meter_type_id] || 0
                             };
                         });
-
+                        
                         metersData = allMeters;
                         renderMeterTable(allMeters);
                         return;
@@ -269,7 +269,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             current_tariff: tariffs[meter.meter_type_id] || 0
                         };
                     });
-
+                    
                     metersData = allMeters;
                     renderMeterTable(allMeters);
                     return;
@@ -456,13 +456,13 @@ document.addEventListener('DOMContentLoaded', function () {
             console.log(`Выбранный CSS класс: "${cellClass}"`);
 
             row.innerHTML = `
-                <td class="resource-type ${cellClass}">${meter.meter_type}</td>
-                <td>${formatDate(meter.prev_date)}</td>
-                <td>${meter.prev_reading}</td>
-                <td>${currentDate}</td>
-                <td><input type="number" class="currentReading" data-meter-id="${meter.meter_id}" style="-moz-appearance: textfield;"></td>
-                <td class="consumption">0</td>
-                <td class="amount" data-tariff="${meter.current_tariff || 0}">0</td>
+                <td class="resource-type ${cellClass}" data-label="Тип ресурса">${meter.meter_type}</td>
+                <td data-label="Дата предыдущих показаний">${formatDate(meter.prev_date)}</td>
+                <td data-label="Предыдущие показания">${meter.prev_reading}</td>
+                <td data-label="Дата текущих показаний">${currentDate}</td>
+                <td data-label="Текущие показания"><input type="number" class="currentReading" data-meter-id="${meter.meter_id}" style="-moz-appearance: textfield;"></td>
+                <td class="consumption" data-label="Расход">0</td>
+                <td class="amount" data-label="Сумма" data-tariff="${meter.current_tariff || 0}">0</td>
             `;
             meterTableBody.appendChild(row);
         });
