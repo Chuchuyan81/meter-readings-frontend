@@ -80,6 +80,19 @@
             <h3>📋 Результаты сравнения</h3>
             <div id="comparisonTable"></div>
         </div>
+        
+        <div class="test-section">
+            <h3>🧰 Управление показаниями (удаление)</h3>
+            <div>
+                <label>
+                    ID счетчика:
+                    <input type="text" id="manageMeterId" placeholder="Напр.: 6879e21d001dc085da1f" style="width:420px;">
+                </label>
+                <button onclick="loadMeterReadings()">Показать показания</button>
+            </div>
+            <div id="manageReadingsLog" class="log"></div>
+            <div id="manageReadingsTable"></div>
+        </div>
     </div>
 
     <!-- Appwrite SDK -->
@@ -222,6 +235,111 @@
             container.innerHTML = html;
             
             log('comparisonLog', 'Таблица сравнения создана', 'success');
+        }
+
+        // === Управление показаниями ===
+        function logManage(message, type = 'info') {
+            const logElement = document.getElementById('manageReadingsLog');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : type === 'warning' ? 'warning' : 'info';
+            logElement.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        async function ensureAuth() {
+            if (!initAppwrite()) {
+                logManage('Ошибка инициализации Appwrite', 'error');
+                return false;
+            }
+            let ok = await checkExistingSession();
+            if (!ok) {
+                ok = await createAnonymousSession();
+            }
+            if (!ok) {
+                logManage('Не удалось авторизоваться', 'error');
+                return false;
+            }
+            return true;
+        }
+
+        async function loadMeterReadings() {
+            try {
+                document.getElementById('manageReadingsTable').innerHTML = '';
+                document.getElementById('manageReadingsLog').innerHTML = '';
+
+                const meterId = document.getElementById('manageMeterId').value.trim();
+                if (!meterId) {
+                    logManage('Укажите ID счетчика', 'warning');
+                    return;
+                }
+
+                const authed = await ensureAuth();
+                if (!authed) return;
+
+                const { Query } = Appwrite;
+                logManage(`Загружаю показания для счетчика ${meterId}...`);
+                const resp = await databases.listDocuments(
+                    DATABASE_ID,
+                    METER_READINGS_COLLECTION_ID,
+                    [Query.equal('meter_id', meterId)]
+                );
+
+                const docs = (resp.documents || []).slice().sort((a,b) => new Date(b.reading_date) - new Date(a.reading_date));
+                logManage(`Найдено показаний: ${docs.length}`, docs.length ? 'info' : 'warning');
+
+                let html = `
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Doc ID</th>
+                                <th>Дата</th>
+                                <th>Показание</th>
+                                <th>Создано</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                docs.forEach(doc => {
+                    html += `
+                        <tr>
+                            <td>${doc.$id}</td>
+                            <td>${doc.reading_date}</td>
+                            <td>${doc.reading}</td>
+                            <td>${doc.created_at || ''}</td>
+                            <td><button onclick="deleteReadingById('${doc.$id}', '${meterId}')">Удалить</button></td>
+                        </tr>
+                    `;
+                });
+
+                html += '</tbody></table>';
+                document.getElementById('manageReadingsTable').innerHTML = html;
+                logManage('Таблица показаний обновлена', 'success');
+            } catch (e) {
+                logManage(`Ошибка загрузки: ${e.message}`, 'error');
+            }
+        }
+
+        async function deleteReadingById(docId, meterId) {
+            try {
+                if (!docId) return;
+                if (!confirm(`Удалить показание ${docId}?`)) return;
+
+                const authed = await ensureAuth();
+                if (!authed) return;
+
+                await databases.deleteDocument(
+                    DATABASE_ID,
+                    METER_READINGS_COLLECTION_ID,
+                    docId
+                );
+                logManage(`Показание удалено: ${docId}`, 'success');
+                // Обновляем список
+                await loadMeterReadings();
+            } catch (e) {
+                logManage(`Ошибка удаления: ${e.message}`, 'error');
+            }
         }
 
         // Инициализация
