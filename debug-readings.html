@@ -83,14 +83,17 @@
         
         <div class="test-section">
             <h3>🧰 Управление показаниями (удаление)</h3>
-            <div>
+            <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center;">
                 <label>
-                    ID счетчика:
-                    <input type="text" id="manageMeterId" placeholder="Напр.: 6879e21d001dc085da1f" style="width:420px;">
+                    Город:
+                    <select id="citySelect" style="min-width:280px;"><option>Загрузка...</option></select>
                 </label>
-                <button onclick="loadMeterReadings()">Показать показания</button>
+                <label>
+                    Счётчик:
+                    <select id="meterSelect" style="min-width:420px;" disabled><option>Выберите город</option></select>
+                </label>
             </div>
-            <div id="manageReadingsLog" class="log"></div>
+            <div id="manageReadingsLog" class="log" style="margin-top:10px;"></div>
             <div id="manageReadingsTable"></div>
         </div>
     </div>
@@ -262,14 +265,111 @@
             return true;
         }
 
-        async function loadMeterReadings() {
+        // Карты соответствия
+        const citiesMap = {}; // $id города -> простой id ('1','2','3')
+        const meterTypesMap = {}; // простой id типа -> наименование
+
+        async function loadCities() {
+            try {
+                const authed = await ensureAuth();
+                if (!authed) return;
+
+                logManage('Загружаю список городов...');
+                const resp = await databases.listDocuments(DATABASE_ID, CITIES_COLLECTION_ID);
+                const citySelect = document.getElementById('citySelect');
+                citySelect.innerHTML = '';
+
+                // Добавляем плейсхолдер
+                const def = document.createElement('option');
+                def.value = '';
+                def.textContent = '— Выберите город —';
+                def.disabled = true;
+                def.selected = true;
+                citySelect.appendChild(def);
+
+                (resp.documents || []).forEach((city, index) => {
+                    const simpleId = String(index + 1);
+                    citiesMap[city.$id] = simpleId;
+                    const opt = document.createElement('option');
+                    opt.value = city.$id;
+                    opt.textContent = city.name;
+                    citySelect.appendChild(opt);
+                });
+
+                logManage(`Загружено городов: ${(resp.documents || []).length}`, 'success');
+            } catch (e) {
+                logManage(`Ошибка загрузки городов: ${e.message}`, 'error');
+            }
+        }
+
+        async function loadMeterTypes() {
+            try {
+                logManage('Загружаю типы счётчиков...');
+                const resp = await databases.listDocuments(DATABASE_ID, METER_TYPES_COLLECTION_ID);
+                meterTypesMap.__order = [];
+                (resp.documents || []).forEach((typeDoc, index) => {
+                    const simpleTypeId = String(index + 1);
+                    meterTypesMap[simpleTypeId] = typeDoc.name;
+                    meterTypesMap.__order.push(typeDoc.$id);
+                });
+                logManage(`Типы счётчиков загружены: ${(resp.documents || []).length}`, 'success');
+            } catch (e) {
+                logManage(`Ошибка загрузки типов счётчиков: ${e.message}`, 'error');
+            }
+        }
+
+        async function loadMetersForCity(cityId) {
+            try {
+                const meterSelect = document.getElementById('meterSelect');
+                meterSelect.innerHTML = '';
+                meterSelect.disabled = true;
+
+                if (!cityId) return;
+
+                const simpleCityId = citiesMap[cityId];
+                if (!simpleCityId) {
+                    logManage('Не удалось сопоставить простой ID города', 'warning');
+                    return;
+                }
+
+                logManage(`Загружаю счётчики для города (${cityId} -> ${simpleCityId})...`);
+                const { Query } = Appwrite;
+                const resp = await databases.listDocuments(
+                    DATABASE_ID,
+                    METERS_COLLECTION_ID,
+                    [Query.equal('city_id', simpleCityId)]
+                );
+
+                // Плейсхолдер
+                const def = document.createElement('option');
+                def.value = '';
+                def.textContent = '— Выберите счётчик —';
+                def.disabled = true;
+                def.selected = true;
+                meterSelect.appendChild(def);
+
+                (resp.documents || []).forEach(meter => {
+                    const labelType = meterTypesMap[meter.meter_type_id] || `Тип ${meter.meter_type_id}`;
+                    const opt = document.createElement('option');
+                    opt.value = meter.$id;
+                    opt.textContent = `${labelType} — ${meter.$id}`;
+                    meterSelect.appendChild(opt);
+                });
+
+                meterSelect.disabled = false;
+                logManage(`Загружено счётчиков: ${(resp.documents || []).length}`, 'success');
+            } catch (e) {
+                logManage(`Ошибка загрузки счётчиков: ${e.message}`, 'error');
+            }
+        }
+
+        async function loadMeterReadings(meterId) {
             try {
                 document.getElementById('manageReadingsTable').innerHTML = '';
-                document.getElementById('manageReadingsLog').innerHTML = '';
+                // не очищаем лог, копим историю действий
 
-                const meterId = document.getElementById('manageMeterId').value.trim();
                 if (!meterId) {
-                    logManage('Укажите ID счетчика', 'warning');
+                    logManage('Сначала выберите счётчик', 'warning');
                     return;
                 }
 
@@ -277,7 +377,7 @@
                 if (!authed) return;
 
                 const { Query } = Appwrite;
-                logManage(`Загружаю показания для счетчика ${meterId}...`);
+                logManage(`Загружаю показания для счётчика ${meterId}...`);
                 const resp = await databases.listDocuments(
                     DATABASE_ID,
                     METER_READINGS_COLLECTION_ID,
@@ -336,11 +436,33 @@
                 );
                 logManage(`Показание удалено: ${docId}`, 'success');
                 // Обновляем список
-                await loadMeterReadings();
+                const meterSelect = document.getElementById('meterSelect');
+                await loadMeterReadings(meterSelect.value);
             } catch (e) {
                 logManage(`Ошибка удаления: ${e.message}`, 'error');
             }
         }
+
+        // Подписки на события селектов
+        window.addEventListener('load', async function() {
+            // Инициализация селектов
+            await loadMeterTypes();
+            await loadCities();
+
+            const citySelect = document.getElementById('citySelect');
+            const meterSelect = document.getElementById('meterSelect');
+
+            citySelect.addEventListener('change', async function() {
+                const cityId = citySelect.value;
+                document.getElementById('manageReadingsTable').innerHTML = '';
+                await loadMetersForCity(cityId);
+            });
+
+            meterSelect.addEventListener('change', async function() {
+                const meterId = meterSelect.value;
+                await loadMeterReadings(meterId);
+            });
+        });
 
         // Инициализация
         window.addEventListener('load', async function() {
