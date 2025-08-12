@@ -256,8 +256,10 @@ main {
     background: white;
     border-radius: var(--border-radius);
     box-shadow: 0 8px 32px var(--shadow-color);
-    overflow: hidden;
+    overflow-x: auto; /* Горизонтальная прокрутка для узких экранов */
+    overflow-y: hidden;
     margin-bottom: 2rem;
+    -webkit-overflow-scrolling: touch; /* Плавный скролл на iOS */
 }
 
 .meter-table,
@@ -265,6 +267,8 @@ main {
     width: 100%;
     border-collapse: collapse;
     background: white;
+    min-width: 720px; /* Минимальная ширина таблиц для включения горизонтального скролла на мобильных */
+    table-layout: auto;
 }
 
 .meter-table th,
@@ -289,11 +293,14 @@ main {
     z-index: 10;
 }
 
-.meter-table tbody tr:hover,
-.tariffs-table tbody tr:hover {
-    background-color: #f8f9fa;
-    transform: scale(1.01);
-    transition: var(--transition);
+/* Ховер-эффекты только на устройствах с курсором */
+@media (hover: hover) and (pointer: fine) {
+    .meter-table tbody tr:hover,
+    .tariffs-table tbody tr:hover {
+        background-color: #f8f9fa;
+        transform: scale(1.01);
+        transition: var(--transition);
+    }
 }
 
 .meter-table input[type="number"],
@@ -487,7 +494,7 @@ main {
 
     .nav-link {
         width: 100%;
-        max-width: 200px;
+        max-width: 100%;
         text-align: center;
     }
 
@@ -528,6 +535,11 @@ main {
     .table-container {
         margin-bottom: 1rem;
         border-radius: 8px;
+    }
+
+    .meter-table,
+    .tariffs-table {
+        min-width: 640px; /* Чуть меньше на планшетах/малых экранах */
     }
 
     .meter-table,
