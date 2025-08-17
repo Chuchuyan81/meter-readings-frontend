@@ -201,22 +201,29 @@ document.addEventListener('DOMContentLoaded', function () {
                     DATABASE_ID,
                     TARIFFS_COLLECTION_ID,
                     [
-                        Query.equal('city_id', simpleCityId),
-                        Query.equal('end_date', '')
+                        Query.equal('city_id', cityId),
+                        Query.isNull('end_date')
                     ]
                 );
 
                 console.log('Тарифы:', tariffsResponse.documents);
 
                 const tariffs = {};
-                tariffsResponse.documents.forEach(tariff => {
-                    // Используем простой ID типа счетчика для тарифов
-                    const simpleTypeId = String(tariff.tariff_type_id);
-                    tariffs[simpleTypeId] = tariff.tariff;
-                    console.log(`Тариф: тип=${simpleTypeId}, значение=${tariff.tariff}`);
+                // Строим обратную карту: Appwrite ID типа -> простой ID
+                const appwriteTypeIdToSimpleId = Object.fromEntries(
+                    Object.entries(meterTypesMap).map(([simpleId, appwriteId]) => [appwriteId, simpleId])
+                );
+                tariffsResponse.documents.forEach(tariffDoc => {
+                    const simpleTypeId = appwriteTypeIdToSimpleId[String(tariffDoc.tariff_type_id)] || null;
+                    if (simpleTypeId) {
+                        tariffs[simpleTypeId] = tariffDoc.tariff;
+                        console.log(`Тариф: тип(simple)=${simpleTypeId}, значение=${tariffDoc.tariff}`);
+                    } else {
+                        console.warn('Не удалось сопоставить тип тарифа с простым ID:', tariffDoc.tariff_type_id);
+                    }
                 });
                 
-                console.log('Карта тарифов:', tariffs);
+                console.log('Карта тарифов (по простым ID):', tariffs);
 
                 // Получаем последние показания из коллекции meter_readings
                 console.log('=== НАЧАЛО ЗАГРУЗКИ ПОКАЗАНИЙ ===');
@@ -244,7 +251,8 @@ document.addEventListener('DOMContentLoaded', function () {
                                 meter_type_id: meter.meter_type_id,
                                 prev_date: meter.prev_date,
                                 prev_reading: meter.prev_reading,
-                                current_tariff: tariffs[meter.meter_type_id] || 0
+                                current_tariff: tariffs[meter.meter_type_id] || 0,
+                                city_id: cityId
                             };
                         });
                         
@@ -266,7 +274,8 @@ document.addEventListener('DOMContentLoaded', function () {
                             meter_type_id: meter.meter_type_id,
                             prev_date: meter.prev_date,
                             prev_reading: meter.prev_reading,
-                            current_tariff: tariffs[meter.meter_type_id] || 0
+                            current_tariff: tariffs[meter.meter_type_id] || 0,
+                            city_id: cityId
                         };
                     });
                     
@@ -325,7 +334,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         meter_type_id: meter.meter_type_id,
                         prev_date: prevDate,
                         prev_reading: prevReading,
-                        current_tariff: tariffs[meter.meter_type_id] || 0
+                        current_tariff: tariffs[meter.meter_type_id] || 0,
+                        city_id: cityId
                     };
                 });
 
@@ -516,8 +526,23 @@ document.addEventListener('DOMContentLoaded', function () {
                     console.log('Тип счетчика ID:', meter.meter_type_id);
                     
                     // Получаем актуальный тариф
-                    const currentTariff = await fetchCurrentTariff(meterId, meter.city_id, meter.meter_type_id);
-                    const tariff = currentTariff ? currentTariff.tariff : 0;
+                    let tariff = 0;
+                    try {
+                        const resp = await databases.listDocuments(
+                            DATABASE_ID,
+                            TARIFFS_COLLECTION_ID,
+                            [
+                                Query.equal('city_id', meter.city_id),
+                                Query.equal('tariff_type_id', meter.meter_type_id),
+                                Query.isNull('end_date'),
+                                Query.orderDesc('start_date'),
+                                Query.limit(1)
+                            ]
+                        );
+                        tariff = resp.documents && resp.documents.length > 0 ? resp.documents[0].tariff : 0;
+                    } catch (tariffErr) {
+                        console.error('Ошибка загрузки тарифа в обработчике ввода:', tariffErr);
+                    }
                     
                     console.log('Актуальный тариф:', tariff);
                     
