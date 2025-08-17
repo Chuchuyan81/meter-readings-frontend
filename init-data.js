@@ -121,7 +121,7 @@ async function createSampleTariffs(cities, meterTypes) {
             try {
                 const tariffData = {
                     city_id: city.$id,
-                    meter_type_id: meterType.$id,
+                    tariff_type_id: meterType.$id,
                     tariff: tariffRates[meterType.name] || 1.0,
                     start_date: currentDate,
                     end_date: null

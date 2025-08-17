@@ -127,7 +127,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 APPWRITE_CONFIG.collections.tariffs,
                 [
                     Query.equal('city_id', cityId),
-                    Query.equal('meter_type_id', meterTypeId),
+                    Query.equal('tariff_type_id', meterTypeId),
                     Query.isNull('end_date')
                 ]
             );
