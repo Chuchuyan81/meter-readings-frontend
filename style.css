@@ -654,10 +654,11 @@ main {
         border: none;
         border-bottom: 1px solid #f1f3f4;
         position: relative;
-        padding: 12px 8px 12px 35%;
+        padding: 12px 8px;
         min-height: 60px;
         display: flex;
         align-items: center;
+        justify-content: space-between;
         word-wrap: break-word;
         overflow-wrap: break-word;
         font-weight: 500;
@@ -669,16 +670,15 @@ main {
     }
     .meter-table td::before {
         content: attr(data-label) ":";
-        position: absolute;
-        left: 8px;
-        top: 50%;
-        transform: translateY(-50%);
+        position: static;
         font-weight: 700;
         color: #333;
         background-color: rgba(255, 255, 255, 0.9);
-        padding: 4px 6px;
-        border-radius: 4px;
-        width: 30%;
+        padding: 6px 10px;
+        border-radius: 6px;
+        width: auto;
+        min-width: 120px;
+        max-width: 40%;
         font-size: 0.8rem;
         line-height: 1.2;
         white-space: normal;
@@ -686,7 +686,8 @@ main {
         border: 1px solid #e0e0e0;
         text-transform: uppercase;
         letter-spacing: 0.3px;
-        z-index: 1;
+        flex-shrink: 0;
+        margin-right: 12px;
     }
     
     /* Специальные стили для ячейки с типом ресурса */
@@ -721,23 +722,26 @@ main {
     }
 
     /* Стили для значений в ячейках (не поля ввода) */
-    .meter-table td:not(.resource-type) {
-        padding-left: 35%;
-    }
-
     .meter-table td:not(.resource-type) > *:not(input) {
-        width: 100%;
-        text-align: left;
+        text-align: right;
         font-weight: 500;
         color: #333;
-    }
-
-    /* Дополнительные стили для текстовых значений */
-    .meter-table td:not(.resource-type):not(:has(input)) {
+        flex: 1;
+        min-width: 0;
+        padding: 6px 10px;
         background-color: rgba(248, 249, 250, 0.8);
         border-radius: 6px;
-        margin: 2px 0;
-        padding: 8px 8px 8px 35%;
+        border: 1px solid #e9ecef;
+    }
+
+    /* Специальные стили для полей ввода */
+    .meter-table td:has(input) {
+        align-items: stretch;
+    }
+
+    .meter-table td:has(input) input {
+        flex: 1;
+        min-width: 0;
     }
 
     .meter-table,
@@ -930,10 +934,8 @@ main {
 
         .meter-table td:not(.resource-type) > *:not(input) {
             color: white;
-        }
-
-        .meter-table td:not(.resource-type):not(:has(input)) {
             background-color: rgba(64, 64, 64, 0.8);
+            border-color: #565656;
         }
 
         /* Цветовые индикаторы для мобильных в темной теме */
