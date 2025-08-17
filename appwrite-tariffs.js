@@ -123,7 +123,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             const enrichedTariffs = tariffs.map(tariff => ({
                 ...tariff,
                 city_name: cityMap.get(tariff.city_id) || 'Неизвестный город',
-                meter_type_name: meterTypeMap.get(tariff.meter_type_id) || 'Неизвестный тип'
+                meter_type_name: meterTypeMap.get(tariff.tariff_type_id) || 'Неизвестный тип'
             }));
             
             return enrichedTariffs;
@@ -202,7 +202,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 TARIFFS_COLLECTION_ID,
                 [
                     Query.equal('city_id', cityId),
-                    Query.equal('meter_type_id', meterTypeId),
+                    Query.equal('tariff_type_id', meterTypeId),
                     Query.isNull('end_date')
                 ]
             );
@@ -227,7 +227,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 ID.unique(),
                 {
                     city_id: cityId,
-                    meter_type_id: meterTypeId,
+                    tariff_type_id: meterTypeId,
                     tariff: newTariff,
                     start_date: currentDate,
                     end_date: null
