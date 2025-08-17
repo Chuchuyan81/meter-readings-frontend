@@ -567,37 +567,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Обработчик для кнопки "Рассчитать"
     const calculateButton = document.getElementById('calculateButton');
-    calculateButton.addEventListener('click', async function () {
+    calculateButton.addEventListener('click', function () {
         console.log('=== РАСЧЕТ ИТОГОВОЙ СУММЫ ===');
         
-        try {
-            // Обновляем все расчеты с актуальными тарифами
-            const rows = meterTableBody.querySelectorAll('tr');
-            for (const row of rows) {
-                const currentReadingInput = row.querySelector('.currentReading');
-                if (currentReadingInput && currentReadingInput.value !== '') {
-                    // Триггерим событие focusout для пересчета с актуальными тарифами
-                    currentReadingInput.dispatchEvent(new Event('focusout'));
-                }
-            }
-            
-            // Даем время на обновление расчетов
-            await new Promise(resolve => setTimeout(resolve, 100));
-            
-            // Считаем итоговую сумму
-            let totalAmount = 0;
-            const amountCells = meterTableBody.querySelectorAll('.amount');
-            amountCells.forEach(amountCell => {
-                totalAmount += parseFloat(amountCell.textContent || 0);
-            });
-            
-            console.log('Итоговая сумма:', totalAmount.toFixed(2));
-            totalAmountDiv.textContent = `По счетчикам: ${totalAmount.toFixed(2)}`;
-            
-        } catch (error) {
-            console.error('Ошибка расчета:', error);
-            alert('Ошибка расчета: ' + error.message);
-        }
+        // Считаем итоговую сумму
+        let totalAmount = 0;
+        const amountCells = meterTableBody.querySelectorAll('.amount');
+        amountCells.forEach(amountCell => {
+            totalAmount += parseFloat(amountCell.textContent || 0);
+        });
+        
+        console.log('Итоговая сумма:', totalAmount.toFixed(2));
+        totalAmountDiv.textContent = `По счетчикам: ${totalAmount.toFixed(2)}`;
     });
 
     // Обработчик для кнопки "Сохранить"
@@ -715,46 +696,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Обработчик для кнопки "Обновить тарифы"
-    const refreshTariffsButton = document.getElementById('refreshTariffsButton');
-    refreshTariffsButton.addEventListener('click', async function() {
-        console.log('=== ОБНОВЛЕНИЕ ТАРИФОВ ===');
-        
-        if (!selectedCityId) {
-            alert('Сначала выберите город');
-            return;
-        }
-        
-        try {
-            refreshTariffsButton.disabled = true;
-            refreshTariffsButton.textContent = '🔄 Обновление...';
-            
-            console.log('Обновляем тарифы для города:', selectedCityId);
-            
-            // Перезагружаем счетчики с актуальными тарифами
-            await fetchMeters(selectedCityId);
-            
-            // Обновляем все расчеты в таблице
-            const rows = meterTableBody.querySelectorAll('tr');
-            for (const row of rows) {
-                const currentReadingInput = row.querySelector('.currentReading');
-                if (currentReadingInput && currentReadingInput.value !== '') {
-                    // Триггерим событие focusout для пересчета
-                    currentReadingInput.dispatchEvent(new Event('focusout'));
-                }
-            }
-            
-            console.log('Тарифы обновлены успешно');
-            alert('Тарифы обновлены! Все расчеты пересчитаны с актуальными тарифами.');
-            
-        } catch (error) {
-            console.error('Ошибка обновления тарифов:', error);
-            alert('Ошибка обновления тарифов: ' + error.message);
-        } finally {
-            refreshTariffsButton.disabled = false;
-            refreshTariffsButton.textContent = '🔄 Обновить тарифы';
-        }
-    });
+
 
     // Обработчик для кнопки "Распечатать справку"
     const printButton = document.getElementById('printButton');
