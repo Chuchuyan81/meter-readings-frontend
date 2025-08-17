@@ -163,12 +163,12 @@ document.addEventListener('DOMContentLoaded', async function () {
             const statusText = isActive ? 'Активный' : 'Неактивный';
             
             row.innerHTML = `
-                <td>${tariff.city_name}</td>
-                <td>${tariff.meter_type_name}</td>
-                <td>${tariff.tariff.toFixed(4)}</td>
-                <td>${formatDate(tariff.start_date)}</td>
-                <td>${formatDate(tariff.end_date)}</td>
-                <td><span class="status ${statusClass}">${statusText}</span></td>
+                <td data-label="Город">${tariff.city_name}</td>
+                <td data-label="Тип счетчика">${tariff.meter_type_name}</td>
+                <td data-label="Тариф">${tariff.tariff.toFixed(4)}</td>
+                <td data-label="Дата начала">${formatDate(tariff.start_date)}</td>
+                <td data-label="Дата окончания">${formatDate(tariff.end_date)}</td>
+                <td data-label="Статус"><span class="status ${statusClass}">${statusText}</span></td>
             `;
             tariffsTableBody.appendChild(row);
         });

@@ -205,11 +205,11 @@ document.addEventListener('DOMContentLoaded', async function () {
         history.forEach(record => {
             const row = document.createElement('tr');
             row.innerHTML = `
-                <td>${formatDate(record.prev_date)}</td>
-                <td>${record.prev_value.toFixed(2)}</td>
-                <td>${formatDate(record.current_date)}</td>
-                <td>${record.current_value.toFixed(2)}</td>
-                <td>${record.consumption.toFixed(2)}</td>
+                <td data-label="Дата предыдущих показаний">${formatDate(record.prev_date)}</td>
+                <td data-label="Предыдущие показания">${record.prev_value.toFixed(2)}</td>
+                <td data-label="Дата текущих показаний">${formatDate(record.current_date)}</td>
+                <td data-label="Текущие показания">${record.current_value.toFixed(2)}</td>
+                <td data-label="Расход">${record.consumption.toFixed(2)}</td>
             `;
             historyTableBody.appendChild(row);
         });
