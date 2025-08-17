@@ -133,7 +133,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     }
 
-    // Функция для форматирования даты
+    // Функция для форматирования даты для отображения (DD.MM.YYYY)
     function formatDate(dateString) {
         if (!dateString) return '-';
         const date = new Date(dateString);
@@ -141,6 +141,14 @@ document.addEventListener('DOMContentLoaded', async function () {
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const year = date.getFullYear();
         return `${day}.${month}.${year}`;
+    }
+
+    // Функция для форматирования даты для Appwrite (YYYY-MM-DD)
+    function formatDateForAppwrite(date = new Date()) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
     }
 
     // Функция для отображения тарифов в таблице
@@ -194,7 +202,13 @@ document.addEventListener('DOMContentLoaded', async function () {
     // Функция для обновления тарифа
     async function updateTariff(cityId, meterTypeId, newTariff) {
         try {
-            const currentDate = new Date().toISOString();
+            console.log('=== ОБНОВЛЕНИЕ ТАРИФА ===');
+            console.log('Город ID:', cityId);
+            console.log('Тип счетчика ID:', meterTypeId);
+            console.log('Новый тариф:', newTariff);
+            
+            const currentDate = formatDateForAppwrite();
+            console.log('Текущая дата (форматированная):', currentDate);
             
             // Ищем активный тариф для данного города и типа счетчика
             const activeResponse = await databases.listDocuments(
@@ -207,9 +221,12 @@ document.addEventListener('DOMContentLoaded', async function () {
                 ]
             );
             
+            console.log('Найдено активных тарифов:', activeResponse.documents.length);
+            
             // Если есть активный тариф, закрываем его
             if (activeResponse.documents.length > 0) {
                 const activeTariff = activeResponse.documents[0];
+                console.log('Закрываем активный тариф:', activeTariff.$id);
                 await databases.updateDocument(
                     DATABASE_ID,
                     TARIFFS_COLLECTION_ID,
@@ -218,26 +235,38 @@ document.addEventListener('DOMContentLoaded', async function () {
                         end_date: currentDate
                     }
                 );
+                console.log('Активный тариф закрыт');
             }
             
             // Создаем новый тариф
-            await databases.createDocument(
+            console.log('Создаем новый тариф...');
+            const newTariffData = {
+                city_id: cityId,
+                tariff_type_id: meterTypeId,
+                tariff: newTariff,
+                start_date: currentDate,
+                end_date: null,
+                created_at: currentDate
+            };
+            console.log('Данные нового тарифа:', newTariffData);
+            
+            const result = await databases.createDocument(
                 DATABASE_ID,
                 TARIFFS_COLLECTION_ID,
                 ID.unique(),
-                {
-                    city_id: cityId,
-                    tariff_type_id: meterTypeId,
-                    tariff: newTariff,
-                    start_date: currentDate,
-                    end_date: null,
-                    created_at: currentDate
-                }
+                newTariffData
             );
             
+            console.log('Новый тариф создан успешно:', result.$id);
             return true;
         } catch (error) {
             console.error('Ошибка обновления тарифа:', error);
+            console.error('Детали ошибки:', {
+                message: error.message,
+                code: error.code,
+                type: error.type,
+                response: error.response
+            });
             throw error;
         }
     }
