@@ -493,7 +493,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Обработчик для поля показаний (расчет при потере фокуса)
-    meterTableBody.addEventListener('focusout', function (event) {
+    meterTableBody.addEventListener('focusout', async function (event) {
         if (event.target.classList.contains('currentReading')) {
             const currentReadingInput = event.target;
             const meterId = currentReadingInput.dataset.meterId;
@@ -503,29 +503,101 @@ document.addEventListener('DOMContentLoaded', function () {
             const prevReadingCell = currentRow.querySelector('td:nth-child(3)');
             const currentReading = parseFloat(currentReadingInput.value);
             const prevReading = parseFloat(prevReadingCell.textContent);
-            const tariff = parseFloat(amountCell.dataset.tariff);
             
-            if (!isNaN(currentReading) && !isNaN(prevReading)) {
-                const consumption = (currentReading - prevReading).toFixed(2);
-                const amount = (consumption * tariff).toFixed(2);
-                consumptionCell.textContent = consumption;
-                amountCell.textContent = amount;
-            } else {
-                consumptionCell.textContent = 0;
-                amountCell.textContent = 0;
+            // Получаем актуальный тариф из базы данных
+            try {
+                console.log('=== ОБНОВЛЕНИЕ ТАРИФА ДЛЯ РАСЧЕТА ===');
+                console.log('Счетчик ID:', meterId);
+                
+                // Находим данные счетчика
+                const meter = metersData.find(m => m.meter_id === meterId);
+                if (meter) {
+                    console.log('Город ID:', meter.city_id);
+                    console.log('Тип счетчика ID:', meter.meter_type_id);
+                    
+                    // Получаем актуальный тариф
+                    const currentTariff = await fetchCurrentTariff(meterId, meter.city_id, meter.meter_type_id);
+                    const tariff = currentTariff ? currentTariff.tariff : 0;
+                    
+                    console.log('Актуальный тариф:', tariff);
+                    
+                    // Обновляем data-tariff в ячейке
+                    amountCell.dataset.tariff = tariff;
+                    
+                    if (!isNaN(currentReading) && !isNaN(prevReading)) {
+                        const consumption = (currentReading - prevReading).toFixed(2);
+                        const amount = (consumption * tariff).toFixed(2);
+                        consumptionCell.textContent = consumption;
+                        amountCell.textContent = amount;
+                        console.log(`Расчет: ${consumption} × ${tariff} = ${amount}`);
+                    } else {
+                        consumptionCell.textContent = 0;
+                        amountCell.textContent = 0;
+                    }
+                } else {
+                    console.warn('Счетчик не найден в данных:', meterId);
+                    // Используем старый тариф
+                    const tariff = parseFloat(amountCell.dataset.tariff) || 0;
+                    if (!isNaN(currentReading) && !isNaN(prevReading)) {
+                        const consumption = (currentReading - prevReading).toFixed(2);
+                        const amount = (consumption * tariff).toFixed(2);
+                        consumptionCell.textContent = consumption;
+                        amountCell.textContent = amount;
+                    } else {
+                        consumptionCell.textContent = 0;
+                        amountCell.textContent = 0;
+                    }
+                }
+            } catch (error) {
+                console.error('Ошибка получения актуального тарифа:', error);
+                // Используем старый тариф в случае ошибки
+                const tariff = parseFloat(amountCell.dataset.tariff) || 0;
+                if (!isNaN(currentReading) && !isNaN(prevReading)) {
+                    const consumption = (currentReading - prevReading).toFixed(2);
+                    const amount = (consumption * tariff).toFixed(2);
+                    consumptionCell.textContent = consumption;
+                    amountCell.textContent = amount;
+                } else {
+                    consumptionCell.textContent = 0;
+                    amountCell.textContent = 0;
+                }
             }
         }
     });
 
     // Обработчик для кнопки "Рассчитать"
     const calculateButton = document.getElementById('calculateButton');
-    calculateButton.addEventListener('click', function () {
-        let totalAmount = 0;
-        const amountCells = meterTableBody.querySelectorAll('.amount');
-        amountCells.forEach(amountCell => {
-            totalAmount += parseFloat(amountCell.textContent || 0);
-        });
-        totalAmountDiv.textContent = `По счетчикам: ${totalAmount.toFixed(2)}`;
+    calculateButton.addEventListener('click', async function () {
+        console.log('=== РАСЧЕТ ИТОГОВОЙ СУММЫ ===');
+        
+        try {
+            // Обновляем все расчеты с актуальными тарифами
+            const rows = meterTableBody.querySelectorAll('tr');
+            for (const row of rows) {
+                const currentReadingInput = row.querySelector('.currentReading');
+                if (currentReadingInput && currentReadingInput.value !== '') {
+                    // Триггерим событие focusout для пересчета с актуальными тарифами
+                    currentReadingInput.dispatchEvent(new Event('focusout'));
+                }
+            }
+            
+            // Даем время на обновление расчетов
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            // Считаем итоговую сумму
+            let totalAmount = 0;
+            const amountCells = meterTableBody.querySelectorAll('.amount');
+            amountCells.forEach(amountCell => {
+                totalAmount += parseFloat(amountCell.textContent || 0);
+            });
+            
+            console.log('Итоговая сумма:', totalAmount.toFixed(2));
+            totalAmountDiv.textContent = `По счетчикам: ${totalAmount.toFixed(2)}`;
+            
+        } catch (error) {
+            console.error('Ошибка расчета:', error);
+            alert('Ошибка расчета: ' + error.message);
+        }
     });
 
     // Обработчик для кнопки "Сохранить"
@@ -640,6 +712,47 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         } else {
             alert('Нет данных для сохранения');
+        }
+    });
+
+    // Обработчик для кнопки "Обновить тарифы"
+    const refreshTariffsButton = document.getElementById('refreshTariffsButton');
+    refreshTariffsButton.addEventListener('click', async function() {
+        console.log('=== ОБНОВЛЕНИЕ ТАРИФОВ ===');
+        
+        if (!selectedCityId) {
+            alert('Сначала выберите город');
+            return;
+        }
+        
+        try {
+            refreshTariffsButton.disabled = true;
+            refreshTariffsButton.textContent = '🔄 Обновление...';
+            
+            console.log('Обновляем тарифы для города:', selectedCityId);
+            
+            // Перезагружаем счетчики с актуальными тарифами
+            await fetchMeters(selectedCityId);
+            
+            // Обновляем все расчеты в таблице
+            const rows = meterTableBody.querySelectorAll('tr');
+            for (const row of rows) {
+                const currentReadingInput = row.querySelector('.currentReading');
+                if (currentReadingInput && currentReadingInput.value !== '') {
+                    // Триггерим событие focusout для пересчета
+                    currentReadingInput.dispatchEvent(new Event('focusout'));
+                }
+            }
+            
+            console.log('Тарифы обновлены успешно');
+            alert('Тарифы обновлены! Все расчеты пересчитаны с актуальными тарифами.');
+            
+        } catch (error) {
+            console.error('Ошибка обновления тарифов:', error);
+            alert('Ошибка обновления тарифов: ' + error.message);
+        } finally {
+            refreshTariffsButton.disabled = false;
+            refreshTariffsButton.textContent = '🔄 Обновить тарифы';
         }
     });
 
