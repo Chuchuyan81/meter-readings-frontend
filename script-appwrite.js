@@ -10,6 +10,25 @@ document.addEventListener('DOMContentLoaded', function () {
     let citiesMap = {}; // Карта соответствия ID городов и их упрощенных значений
     let meterTypesMap = {}; // Карта соответствия простых ID типов счетчиков и полных Appwrite ID
 
+    /**
+     * Преобразует идентификатор типа счетчика к Appwrite ID
+     * Если передан простой ID ("1", "2", ...), вернет соответствующий Appwrite ID из карты
+     * Если передан уже Appwrite ID, вернет его без изменений
+     */
+    function resolveAppwriteTypeId(typeId) {
+        if (!typeId) return null;
+        // Если передан простой ID, он будет ключом в meterTypesMap
+        if (Object.prototype.hasOwnProperty.call(meterTypesMap, String(typeId))) {
+            return meterTypesMap[String(typeId)];
+        }
+        // Если передан Appwrite ID, проверим, что он есть среди значений карты
+        const values = Object.values(meterTypesMap);
+        if (values.includes(String(typeId))) {
+            return String(typeId);
+        }
+        return String(typeId);
+    }
+
     // Проверяем, что Appwrite SDK загружен
     if (typeof Appwrite === 'undefined') {
         alert('Ошибка загрузки Appwrite SDK');
@@ -528,12 +547,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     // Получаем актуальный тариф
                     let tariff = 0;
                     try {
+                        const appwriteTypeId = resolveAppwriteTypeId(meter.meter_type_id);
                         const resp = await databases.listDocuments(
                             DATABASE_ID,
                             TARIFFS_COLLECTION_ID,
                             [
                                 Query.equal('city_id', meter.city_id),
-                                Query.equal('tariff_type_id', meter.meter_type_id),
+                                Query.equal('tariff_type_id', appwriteTypeId),
                                 Query.isNull('end_date'),
                                 Query.orderDesc('start_date'),
                                 Query.limit(1)
