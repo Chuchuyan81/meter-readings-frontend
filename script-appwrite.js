@@ -626,6 +626,24 @@ document.addEventListener('DOMContentLoaded', function () {
         totalAmountDiv.textContent = `По счетчикам: ${totalAmount.toFixed(2)}`;
     });
 
+    // Копирование итоговой суммы по клику
+    totalAmountDiv.addEventListener('click', async function () {
+        const text = totalAmountDiv.textContent.trim();
+        if (!text) return;
+        try {
+            await navigator.clipboard.writeText(text);
+            // Визуальная обратная связь: кратковременно меняем текст
+            const original = totalAmountDiv.textContent;
+            totalAmountDiv.textContent = 'Скопировано!';
+            setTimeout(() => {
+                totalAmountDiv.textContent = original;
+            }, 1000);
+        } catch (err) {
+            console.error('Не удалось скопировать текст:', err);
+            alert('Не удалось скопировать. Попробуйте вручную.');
+        }
+    });
+
     // Обработчик для кнопки "Сохранить"
     saveButton.addEventListener('click', async function () {
         const readingsToSave = [];

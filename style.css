@@ -432,6 +432,7 @@ main {
     font-weight: 600;
     box-shadow: 0 8px 32px rgba(52, 152, 219, 0.3);
     animation: fadeIn 0.6s ease-out;
+    cursor: pointer;
 }
 
 .total-amount:empty {
