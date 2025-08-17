@@ -556,8 +556,10 @@ main {
 
     .meter-table input[type="number"],
     .meter-table input[type="text"] {
-        font-size: 0.8rem;
-        padding: 0.25rem;
+        font-size: 1rem;
+        padding: 0.75rem;
+        min-height: 44px; /* Минимальная высота для удобного тапа */
+        border-width: 2px;
     }
 
     .tariff-container {
@@ -615,7 +617,9 @@ main {
         border-bottom: 1px solid #f1f3f4;
         position: relative;
         padding-left: 50%;
-        min-height: 36px;
+        min-height: 56px; /* Увеличиваем для лучшего размещения полей ввода */
+        display: flex;
+        align-items: center;
     }
     .meter-table td:last-child {
         border-bottom: none;
@@ -630,10 +634,16 @@ main {
         color: #666;
         width: 45%;
         white-space: nowrap;
+        font-size: 0.9rem;
     }
     .meter-table input[type="number"],
     .meter-table input[type="text"] {
         width: 100%;
+        font-size: 1.1rem;
+        padding: 1rem;
+        min-height: 48px; /* Увеличиваем для лучшего тапа на мобильных */
+        border-width: 2px;
+        border-radius: 8px;
     }
 
     .meter-table,
@@ -645,7 +655,7 @@ main {
     .meter-table td,
     .tariffs-table th,
     .tariffs-table td {
-        padding: 0.5rem 0.25rem;
+        padding: 0.75rem 0.5rem;
     }
 
     .btn {
@@ -716,10 +726,66 @@ main {
         border: 1px solid #404040;
     }
 
+    .meter-table,
+    .tariffs-table {
+        background: #2d2d2d;
+    }
+
     .meter-table th,
     .tariffs-table th {
         background: linear-gradient(135deg, #404040 0%, #2d2d2d 100%);
         color: white;
+    }
+
+    /* Ячейки таблицы в темной теме */
+    .meter-table td,
+    .tariffs-table td {
+        background: #2d2d2d;
+        color: white;
+        border-bottom-color: #404040;
+    }
+
+    /* Поля ввода в таблице */
+    .meter-table input[type="number"],
+    .meter-table input[type="text"] {
+        background: #404040;
+        color: white;
+        border-color: #565656;
+    }
+
+    .meter-table input[type="number"]:focus,
+    .meter-table input[type="text"]:focus {
+        background: #505050;
+        border-color: var(--primary-color);
+        color: white;
+    }
+
+    /* Цветовые индикаторы в темной теме */
+    .meter-table td.resource-type.electricity {
+        background-color: rgba(46, 125, 50, 0.3);
+        color: #81c784;
+    }
+
+    .meter-table td.resource-type.hot-water {
+        background-color: rgba(183, 28, 28, 0.3);
+        color: #ef5350;
+    }
+
+    .meter-table td.resource-type.cold-water {
+        background-color: rgba(21, 101, 192, 0.3);
+        color: #64b5f6;
+    }
+
+    /* Ховер эффекты для таблицы в темной теме */
+    @media (hover: hover) and (pointer: fine) {
+        .meter-table tbody tr:hover,
+        .tariffs-table tbody tr:hover {
+            background-color: #404040;
+        }
+        
+        .meter-table tbody tr:hover td {
+            background-color: #404040;
+        }
     }
 
     .filter-select,
@@ -734,5 +800,35 @@ main {
     .tariff-value {
         background: #404040;
         color: white;
+    }
+
+    /* Улучшения для мобильной версии в темной теме */
+    @media (max-width: 480px) {
+        .meter-table td::before {
+            color: #ccc;
+        }
+
+        .meter-table input[type="number"],
+        .meter-table input[type="text"] {
+            background: #404040;
+            color: white;
+            border-color: #565656;
+        }
+
+        .meter-table input[type="number"]:focus,
+        .meter-table input[type="text"]:focus {
+            background: #505050;
+            border-color: var(--primary-color);
+            color: white;
+        }
+
+        .meter-table tr {
+            background: #2d2d2d;
+        }
+
+        .meter-table td {
+            color: white;
+            border-bottom-color: #404040;
+        }
     }
 }
