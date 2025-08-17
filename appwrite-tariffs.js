@@ -230,7 +230,8 @@ document.addEventListener('DOMContentLoaded', async function () {
                     tariff_type_id: meterTypeId,
                     tariff: newTariff,
                     start_date: currentDate,
-                    end_date: null
+                    end_date: null,
+                    created_at: currentDate
                 }
             );
             

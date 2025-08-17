@@ -124,7 +124,8 @@ async function createSampleTariffs(cities, meterTypes) {
                     tariff_type_id: meterType.$id,
                     tariff: tariffRates[meterType.name] || 1.0,
                     start_date: currentDate,
-                    end_date: null
+                    end_date: null,
+                    created_at: currentDate
                 };
                 
                 const response = await databases.createDocument(
