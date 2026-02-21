@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Архив справок</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <h1>📜 Архив сохраненных справок</h1>
+        <nav>
+            <a href="index.html" class="nav-link nav-link-light">📝 Ввод показаний</a>
+            <a href="history.html" class="nav-link nav-link-light">📊 История показаний</a>
+            <a href="certificates.html" class="nav-link nav-link-light">📜 Справки</a>
+            <a href="tariffs.html" class="nav-link nav-link-light">💰 Управление тарифами</a>
+        </nav>
+    </header>
+    <main>
+        <div class="filter-container">
+            <p>Здесь отображаются все справки, которые были автоматически сохранены при вводе показаний для Котовского 45.</p>
+        </div>
+
+        <!-- Контейнер для таблицы -->
+        <div class="table-container">
+            <table class="meter-table">
+                <thead>
+                    <tr>
+                        <th>Дата сохранения</th>
+                        <th>Период</th>
+                        <th>Квартира</th>
+                        <th>Холодная (расход)</th>
+                        <th>Горячая (расход)</th>
+                        <th>Действие</th>
+                    </tr>
+                </thead>
+                <tbody id="certificatesTableBody">
+                    <tr>
+                        <td colspan="6" style="text-align: center;">Загрузка справок...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <!-- Appwrite SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@11.0.0"></script>
+    <!-- Конфигурация Appwrite -->
+    <script src="appwrite-config.js"></script>
+    <!-- Скрипт справок -->
+    <script src="appwrite-certificates.js"></script>
+</body>
+</html> 

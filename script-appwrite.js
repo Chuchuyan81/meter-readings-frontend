@@ -713,6 +713,64 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 alert('Показания успешно сохранены!');
                 
+                // === АВТОМАТИЧЕСКОЕ СОХРАНЕНИЕ СПРАВКИ ===
+                try {
+                    const cityName = citySelect.options[citySelect.selectedIndex]?.text || '';
+                    if (cityName.includes('Котовского 45')) {
+                        console.log('Начинаем автоматическое сохранение справки для Котовского 45...');
+                        
+                        let coldWaterData = null;
+                        let hotWaterData = null;
+                        
+                        // Собираем данные для справки из текущего состояния таблицы
+                        meterTableBody.querySelectorAll('tr').forEach(row => {
+                            const resourceType = row.querySelector('td:first-child').textContent.trim().toLowerCase();
+                            const prevReading = parseFloat(row.querySelector('td:nth-child(3)').textContent.replace(',', '.'));
+                            const currentReadingInput = row.querySelector('input[type="number"]');
+                            const currentReading = currentReadingInput ? parseFloat(currentReadingInput.value.replace(',', '.')) : 0;
+                            
+                            if (!isNaN(prevReading) && !isNaN(currentReading) && currentReading > 0) {
+                                const consumption = currentReading - prevReading;
+                                
+                                if (resourceType.includes('холодная')) {
+                                    coldWaterData = { prev: prevReading, current: currentReading, total: consumption };
+                                } else if (resourceType.includes('горячая')) {
+                                    hotWaterData = { prev: prevReading, current: currentReading, total: consumption };
+                                }
+                            }
+                        });
+
+                        if (coldWaterData || hotWaterData) {
+                            const date = new Date();
+                            const certificateData = {
+                                apartment: '73',
+                                month: date.toLocaleString('ru', { month: 'long' }),
+                                year: date.getFullYear(),
+                                coldPrev: coldWaterData ? coldWaterData.prev : 0,
+                                coldCurrent: coldWaterData ? coldWaterData.current : 0,
+                                coldTotal: coldWaterData ? parseFloat(coldWaterData.total.toFixed(2)) : 0,
+                                hotPrev: hotWaterData ? hotWaterData.prev : 0,
+                                hotCurrent: hotWaterData ? hotWaterData.current : 0,
+                                hotTotal: hotWaterData ? parseFloat(hotWaterData.total.toFixed(2)) : 0,
+                                created_at: new Date().toISOString()
+                            };
+
+                            console.log('Данные для сохранения справки:', certificateData);
+                            
+                            await databases.createDocument(
+                                DATABASE_ID,
+                                CERTIFICATES_COLLECTION_ID,
+                                ID.unique(),
+                                certificateData
+                            );
+                            console.log('Справка успешно сохранена автоматически');
+                        }
+                    }
+                } catch (certError) {
+                    console.error('Ошибка при автоматическом сохранении справки:', certError);
+                    // Не прерываем основной поток, если справка не сохранилась
+                }
+
                 // Обновляем данные счетчиков и перерисовываем таблицу
                 if (selectedCityId) {
                     console.log('Перезагружаем данные для города:', selectedCityId);
