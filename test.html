@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тестирование системы - Учет показаний счетчиков</title>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        .test-section h2 {
+            color: #495057;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+        
+        .test-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        
+        .test-item button {
+            margin-right: 10px;
+            padding: 5px 15px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .test-btn {
+            background: #007bff;
+            color: white;
+        }
+        
+        .test-btn:hover {
+            background: #0056b3;
+        }
+        
+        .test-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .test-result {
+            margin-left: 10px;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .log-output {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: #e9ecef;
+            border-radius: 5px;
+            min-width: 120px;
+        }
+        
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #495057;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        
+        .clear-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        
+        .clear-btn:hover {
+            background: #c82333;
+        }
+        
+        .run-all-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .run-all-btn:hover {
+            background: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Тестирование системы учета показаний счетчиков</h1>
+        
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-number" id="totalTests">0</div>
+                <div class="stat-label">Всего тестов</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="passedTests">0</div>
+                <div class="stat-label">Пройдено</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="failedTests">0</div>
+                <div class="stat-label">Провалено</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="pendingTests">0</div>
+                <div class="stat-label">Ожидание</div>
+            </div>
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+            <button class="run-all-btn" onclick="runAllTests()">Запустить все тесты</button>
+            <button class="clear-btn" onclick="clearLog()">Очистить лог</button>
+        </div>
+        
+        <!-- Тесты подключения -->
+        <div class="test-section">
+            <h2>🔌 Подключение к Appwrite</h2>
+            <div class="test-item">
+                <button class="test-btn" onclick="testAppwriteConnection()">Тест</button>
+                <span>Проверка подключения к Appwrite</span>
+                <span class="test-result pending" id="result-connection">Ожидание</span>
+            </div>
+            <div class="test-item">
+                <button class="test-btn" onclick="testDatabaseConnection()">Тест</button>
+                <span>Проверка подключения к базе данных</span>
+                <span class="test-result pending" id="result-database">Ожидание</span>
+            </div>
+        </div>
+        
+        <!-- Тесты коллекций -->
+        <div class="test-section">
+            <h2>📊 Коллекции</h2>
+            <div class="test-item">
+                <button class="test-btn" onclick="testCitiesCollection()">Тест</button>
+                <span>Проверка коллекции городов</span>
+                <span class="test-result pending" id="result-cities">Ожидание</span>
+            </div>
+            <div class="test-item">
+                <button class="test-btn" onclick="testMeterTypesCollection()">Тест</button>
+                <span>Проверка коллекции типов счетчиков</span>
+                <span class="test-result pending" id="result-meter-types">Ожидание</span>
+            </div>
+            <div class="test-item">
+                <button class="test-btn" onclick="testMetersCollection()">Тест</button>
+                <span>Проверка коллекции счетчиков</span>
+                <span class="test-result pending" id="result-meters">Ожидание</span>
+            </div>
+            <div class="test-item">
+                <button class="test-btn" onclick="testTariffsCollection()">Тест</button>
+                <span>Проверка коллекции тарифов</span>
+                <span class="test-result pending" id="result-tariffs">Ожидание</span>
+            </div>
+            <div class="test-item">
+                <button class="test-btn" onclick="testReadingsCollection()">Тест</button>
+                <span>Проверка коллекции показаний</span>
+                <span class="test-result pending" id="result-readings">Ожидание</span>
+            </div>
+        </div>
+        
+        <!-- Тесты CRUD операций -->
+        <div class="test-section">
+            <h2>🔄 CRUD операции</h2>
+            <div class="test-item">
+                <button class="test-btn" onclick="testCreateDocument()">Тест</button>
+                <span>Создание документа</span>
+                <span class="test-result pending" id="result-create">Ожидание</span>
+            </div>
+            <div class="test-item">
+                <button class="test-btn" onclick="testReadDocument()">Тест</button>
+                <span>Чтение документа</span>
+                <span class="test-result pending" id="result-read">Ожидание</span>
+            </div>
+            <div class="test-item">
+                <button class="test-btn" onclick="testUpdateDocument()">Тест</button>
+                <span>Обновление документа</span>
+                <span class="test-result pending" id="result-update">Ожидание</span>
+            </div>
+            <div class="test-item">
+                <button class="test-btn" onclick="testDeleteDocument()">Тест</button>
+                <span>Удаление документа</span>
+                <span class="test-result pending" id="result-delete">Ожидание</span>
+            </div>
+        </div>
+        
+        <!-- Тесты бизнес-логики -->
+        <div class="test-section">
+            <h2>🏢 Бизнес-логика</h2>
+            <div class="test-item">
+                <button class="test-btn" onclick="testMeterReadingFlow()">Тест</button>
+                <span>Полный цикл ввода показаний</span>
+                <span class="test-result pending" id="result-reading-flow">Ожидание</span>
+            </div>
+            <div class="test-item">
+                <button class="test-btn" onclick="testTariffCalculation()">Тест</button>
+                <span>Расчет по тарифам</span>
+                <span class="test-result pending" id="result-tariff-calc">Ожидание</span>
+            </div>
+            <div class="test-item">
+                <button class="test-btn" onclick="testHistoryGeneration()">Тест</button>
+                <span>Генерация истории</span>
+                <span class="test-result pending" id="result-history">Ожидание</span>
+            </div>
+        </div>
+        
+        <!-- Тесты аутентификации -->
+        <div class="test-section">
+            <h2>🔐 Аутентификация</h2>
+            <div class="test-item">
+                <button class="test-btn" onclick="testAuthStatus()">Тест</button>
+                <span>Проверка статуса авторизации</span>
+                <span class="test-result pending" id="result-auth-status">Ожидание</span>
+            </div>
+            <div class="test-item">
+                <button class="test-btn" onclick="testPermissions()">Тест</button>
+                <span>Проверка разрешений</span>
+                <span class="test-result pending" id="result-permissions">Ожидание</span>
+            </div>
+        </div>
+        
+        <div class="log-output" id="logOutput"></div>
+    </div>
+
+    <!-- Подключение зависимостей -->
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@15.0.0"></script>
+    <script src="config.js"></script>
+    
+    <script>
+        // Инициализация Appwrite
+        const { Client, Databases, Query, ID } = Appwrite;
+        
+        let client, databases;
+        let testResults = {};
+        let testDocument = null;
+        
+        // Инициализация клиента
+        function initAppwrite() {
+            try {
+                client = new Client();
+                databases = new Databases(client);
+                
+                client
+                    .setEndpoint(APPWRITE_CONFIG.endpoint)
+                    .setProject(APPWRITE_CONFIG.projectId);
+                
+                return true;
+            } catch (error) {
+                log(`❌ Ошибка инициализации Appwrite: ${error.message}`);
+                return false;
+            }
+        }
+        
+        // Функция логирования
+        function log(message) {
+            const logOutput = document.getElementById('logOutput');
+            const timestamp = new Date().toLocaleTimeString();
+            logOutput.textContent += `[${timestamp}] ${message}\n`;
+            logOutput.scrollTop = logOutput.scrollHeight;
+        }
+        
+        // Обновление результата теста
+        function updateTestResult(testId, status, message = '') {
+            const resultElement = document.getElementById(`result-${testId}`);
+            if (resultElement) {
+                resultElement.className = `test-result ${status}`;
+                resultElement.textContent = status === 'success' ? 'Успешно' : 
+                                          status === 'error' ? 'Ошибка' : 'Ожидание';
+                if (message) {
+                    resultElement.title = message;
+                }
+            }
+            
+            testResults[testId] = { status, message };
+            updateStats();
+        }
+        
+        // Обновление статистики
+        function updateStats() {
+            const results = Object.values(testResults);
+            const total = results.length;
+            const passed = results.filter(r => r.status === 'success').length;
+            const failed = results.filter(r => r.status === 'error').length;
+            const pending = total - passed - failed;
+            
+            document.getElementById('totalTests').textContent = total;
+            document.getElementById('passedTests').textContent = passed;
+            document.getElementById('failedTests').textContent = failed;
+            document.getElementById('pendingTests').textContent = pending;
+        }
+        
+        // Очистка лога
+        function clearLog() {
+            document.getElementById('logOutput').textContent = '';
+        }
+        
+        // Тест подключения к Appwrite
+        async function testAppwriteConnection() {
+            log('🔌 Тестирование подключения к Appwrite...');
+            
+            try {
+                if (!initAppwrite()) {
+                    throw new Error('Не удалось инициализировать Appwrite');
+                }
+                
+                // Простая проверка - попытка получить список баз данных
+                await databases.list();
+                
+                log('✅ Подключение к Appwrite успешно');
+                updateTestResult('connection', 'success');
+            } catch (error) {
+                log(`❌ Ошибка подключения к Appwrite: ${error.message}`);
+                updateTestResult('connection', 'error', error.message);
+            }
+        }
+        
+        // Тест подключения к базе данных
+        async function testDatabaseConnection() {
+            log('📊 Тестирование подключения к базе данных...');
+            
+            try {
+                if (!databases) {
+                    throw new Error('Appwrite не инициализирован');
+                }
+                
+                const database = await databases.get(APPWRITE_CONFIG.databaseId);
+                
+                log(`✅ Подключение к базе данных "${database.name}" успешно`);
+                updateTestResult('database', 'success');
+            } catch (error) {
+                log(`❌ Ошибка подключения к базе данных: ${error.message}`);
+                updateTestResult('database', 'error', error.message);
+            }
+        }
+        
+        // Тест коллекции городов
+        async function testCitiesCollection() {
+            log('🏙️ Тестирование коллекции городов...');
+            
+            try {
+                const response = await databases.listDocuments(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.cities
+                );
+                
+                log(`✅ Коллекция городов: найдено ${response.documents.length} документов`);
+                updateTestResult('cities', 'success');
+            } catch (error) {
+                log(`❌ Ошибка коллекции городов: ${error.message}`);
+                updateTestResult('cities', 'error', error.message);
+            }
+        }
+        
+        // Тест коллекции типов счетчиков
+        async function testMeterTypesCollection() {
+            log('⚡ Тестирование коллекции типов счетчиков...');
+            
+            try {
+                const response = await databases.listDocuments(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.meterTypes
+                );
+                
+                log(`✅ Коллекция типов счетчиков: найдено ${response.documents.length} документов`);
+                updateTestResult('meter-types', 'success');
+            } catch (error) {
+                log(`❌ Ошибка коллекции типов счетчиков: ${error.message}`);
+                updateTestResult('meter-types', 'error', error.message);
+            }
+        }
+        
+        // Тест коллекции счетчиков
+        async function testMetersCollection() {
+            log('📊 Тестирование коллекции счетчиков...');
+            
+            try {
+                const response = await databases.listDocuments(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.meters
+                );
+                
+                log(`✅ Коллекция счетчиков: найдено ${response.documents.length} документов`);
+                updateTestResult('meters', 'success');
+            } catch (error) {
+                log(`❌ Ошибка коллекции счетчиков: ${error.message}`);
+                updateTestResult('meters', 'error', error.message);
+            }
+        }
+        
+        // Тест коллекции тарифов
+        async function testTariffsCollection() {
+            log('💰 Тестирование коллекции тарифов...');
+            
+            try {
+                const response = await databases.listDocuments(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.tariffs
+                );
+                
+                log(`✅ Коллекция тарифов: найдено ${response.documents.length} документов`);
+                updateTestResult('tariffs', 'success');
+            } catch (error) {
+                log(`❌ Ошибка коллекции тарифов: ${error.message}`);
+                updateTestResult('tariffs', 'error', error.message);
+            }
+        }
+        
+        // Тест коллекции показаний
+        async function testReadingsCollection() {
+            log('📈 Тестирование коллекции показаний...');
+            
+            try {
+                const response = await databases.listDocuments(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.meterReadings
+                );
+                
+                log(`✅ Коллекция показаний: найдено ${response.documents.length} документов`);
+                updateTestResult('readings', 'success');
+            } catch (error) {
+                log(`❌ Ошибка коллекции показаний: ${error.message}`);
+                updateTestResult('readings', 'error', error.message);
+            }
+        }
+        
+        // Тест создания документа
+        async function testCreateDocument() {
+            log('➕ Тестирование создания документа...');
+            
+            try {
+                const testData = {
+                    name: `Тестовый город ${Date.now()}`
+                };
+                
+                testDocument = await databases.createDocument(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.cities,
+                    ID.unique(),
+                    testData
+                );
+                
+                log(`✅ Документ создан с ID: ${testDocument.$id}`);
+                updateTestResult('create', 'success');
+            } catch (error) {
+                log(`❌ Ошибка создания документа: ${error.message}`);
+                updateTestResult('create', 'error', error.message);
+            }
+        }
+        
+        // Тест чтения документа
+        async function testReadDocument() {
+            log('👁️ Тестирование чтения документа...');
+            
+            try {
+                if (!testDocument) {
+                    throw new Error('Нет тестового документа для чтения');
+                }
+                
+                const document = await databases.getDocument(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.cities,
+                    testDocument.$id
+                );
+                
+                log(`✅ Документ прочитан: ${document.name}`);
+                updateTestResult('read', 'success');
+            } catch (error) {
+                log(`❌ Ошибка чтения документа: ${error.message}`);
+                updateTestResult('read', 'error', error.message);
+            }
+        }
+        
+        // Тест обновления документа
+        async function testUpdateDocument() {
+            log('✏️ Тестирование обновления документа...');
+            
+            try {
+                if (!testDocument) {
+                    throw new Error('Нет тестового документа для обновления');
+                }
+                
+                const updatedData = {
+                    name: `Обновленный город ${Date.now()}`
+                };
+                
+                const updatedDocument = await databases.updateDocument(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.cities,
+                    testDocument.$id,
+                    updatedData
+                );
+                
+                log(`✅ Документ обновлен: ${updatedDocument.name}`);
+                updateTestResult('update', 'success');
+            } catch (error) {
+                log(`❌ Ошибка обновления документа: ${error.message}`);
+                updateTestResult('update', 'error', error.message);
+            }
+        }
+        
+        // Тест удаления документа
+        async function testDeleteDocument() {
+            log('🗑️ Тестирование удаления документа...');
+            
+            try {
+                if (!testDocument) {
+                    throw new Error('Нет тестового документа для удаления');
+                }
+                
+                await databases.deleteDocument(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.cities,
+                    testDocument.$id
+                );
+                
+                log(`✅ Документ удален: ${testDocument.$id}`);
+                updateTestResult('delete', 'success');
+                testDocument = null;
+            } catch (error) {
+                log(`❌ Ошибка удаления документа: ${error.message}`);
+                updateTestResult('delete', 'error', error.message);
+            }
+        }
+        
+        // Тест полного цикла ввода показаний
+        async function testMeterReadingFlow() {
+            log('🔄 Тестирование полного цикла ввода показаний...');
+            
+            try {
+                // Получаем первый доступный счетчик
+                const metersResponse = await databases.listDocuments(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.meters,
+                    [Query.limit(1)]
+                );
+                
+                if (metersResponse.documents.length === 0) {
+                    throw new Error('Нет доступных счетчиков для тестирования');
+                }
+                
+                const meter = metersResponse.documents[0];
+                const currentDate = new Date().toISOString();
+                const testReading = Math.random() * 1000;
+                
+                // Создаем показание
+                const readingData = {
+                    meter_id: meter.$id,
+                    reading_date: currentDate,
+                    reading: testReading
+                };
+                
+                const reading = await databases.createDocument(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.meterReadings,
+                    ID.unique(),
+                    readingData
+                );
+                
+                // Обновляем счетчик
+                await databases.updateDocument(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.meters,
+                    meter.$id,
+                    {
+                        prev_date: currentDate,
+                        prev_reading: testReading
+                    }
+                );
+                
+                log(`✅ Цикл ввода показаний завершен: ${testReading.toFixed(2)}`);
+                updateTestResult('reading-flow', 'success');
+                
+                // Очищаем тестовое показание
+                await databases.deleteDocument(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.meterReadings,
+                    reading.$id
+                );
+                
+            } catch (error) {
+                log(`❌ Ошибка цикла ввода показаний: ${error.message}`);
+                updateTestResult('reading-flow', 'error', error.message);
+            }
+        }
+        
+        // Тест расчета по тарифам
+        async function testTariffCalculation() {
+            log('💰 Тестирование расчета по тарифам...');
+            
+            try {
+                const tariffsResponse = await databases.listDocuments(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.tariffs,
+                    [Query.limit(1)]
+                );
+                
+                if (tariffsResponse.documents.length === 0) {
+                    throw new Error('Нет доступных тарифов для тестирования');
+                }
+                
+                const tariff = tariffsResponse.documents[0];
+                const consumption = 100;
+                const amount = consumption * tariff.tariff;
+                
+                log(`✅ Расчет по тарифу: ${consumption} × ${tariff.tariff} = ${amount.toFixed(2)}`);
+                updateTestResult('tariff-calc', 'success');
+            } catch (error) {
+                log(`❌ Ошибка расчета по тарифам: ${error.message}`);
+                updateTestResult('tariff-calc', 'error', error.message);
+            }
+        }
+        
+        // Тест генерации истории
+        async function testHistoryGeneration() {
+            log('📊 Тестирование генерации истории...');
+            
+            try {
+                const readingsResponse = await databases.listDocuments(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.collections.meterReadings,
+                    [Query.limit(10)]
+                );
+                
+                log(`✅ История сгенерирована: найдено ${readingsResponse.documents.length} записей`);
+                updateTestResult('history', 'success');
+            } catch (error) {
+                log(`❌ Ошибка генерации истории: ${error.message}`);
+                updateTestResult('history', 'error', error.message);
+            }
+        }
+        
+        // Тест статуса авторизации
+        async function testAuthStatus() {
+            log('🔐 Тестирование статуса авторизации...');
+            
+            try {
+                // Проверяем, подключен ли модуль авторизации
+                if (typeof authManager !== 'undefined') {
+                    const isLoggedIn = authManager.isLoggedIn();
+                    const user = authManager.getCurrentUser();
+                    
+                    log(`✅ Статус авторизации: ${isLoggedIn ? 'Авторизован' : 'Не авторизован'}`);
+                    if (user) {
+                        log(`👤 Пользователь: ${user.name} (${user.email})`);
+                    }
+                } else {
+                    log('⚠️ Модуль авторизации не подключен');
+                }
+                
+                updateTestResult('auth-status', 'success');
+            } catch (error) {
+                log(`❌ Ошибка проверки авторизации: ${error.message}`);
+                updateTestResult('auth-status', 'error', error.message);
+            }
+        }
+        
+        // Тест разрешений
+        async function testPermissions() {
+            log('🛡️ Тестирование разрешений...');
+            
+            try {
+                // Проверяем доступ к различным коллекциям
+                const collections = Object.entries(APPWRITE_CONFIG.collections);
+                let accessibleCollections = 0;
+                
+                for (const [name, id] of collections) {
+                    try {
+                        await databases.listDocuments(
+                            APPWRITE_CONFIG.databaseId,
+                            id,
+                            [Query.limit(1)]
+                        );
+                        accessibleCollections++;
+                    } catch (error) {
+                        log(`⚠️ Нет доступа к коллекции ${name}: ${error.message}`);
+                    }
+                }
+                
+                log(`✅ Доступ к коллекциям: ${accessibleCollections}/${collections.length}`);
+                updateTestResult('permissions', 'success');
+            } catch (error) {
+                log(`❌ Ошибка проверки разрешений: ${error.message}`);
+                updateTestResult('permissions', 'error', error.message);
+            }
+        }
+        
+        // Запуск всех тестов
+        async function runAllTests() {
+            log('🚀 Запуск всех тестов...');
+            
+            const tests = [
+                testAppwriteConnection,
+                testDatabaseConnection,
+                testCitiesCollection,
+                testMeterTypesCollection,
+                testMetersCollection,
+                testTariffsCollection,
+                testReadingsCollection,
+                testCreateDocument,
+                testReadDocument,
+                testUpdateDocument,
+                testDeleteDocument,
+                testMeterReadingFlow,
+                testTariffCalculation,
+                testHistoryGeneration,
+                testAuthStatus,
+                testPermissions
+            ];
+            
+            for (const test of tests) {
+                try {
+                    await test();
+                    // Небольшая задержка между тестами
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                } catch (error) {
+                    log(`❌ Ошибка выполнения теста: ${error.message}`);
+                }
+            }
+            
+            log('🏁 Все тесты завершены');
+        }
+        
+        // Инициализация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', () => {
+            log('🧪 Страница тестирования загружена');
+            log('Настройте config.js и запустите тесты');
+            
+            // Инициализируем счетчики
+            updateStats();
+            
+            // Проверяем конфигурацию
+            if (typeof APPWRITE_CONFIG === 'undefined') {
+                log('❌ Конфигурация APPWRITE_CONFIG не найдена');
+            } else if (!APPWRITE_CONFIG.projectId || APPWRITE_CONFIG.projectId === 'YOUR_PROJECT_ID') {
+                log('⚠️ Не настроен Project ID в config.js');
+            } else {
+                log('✅ Конфигурация загружена');
+                initAppwrite();
+            }
+        });
+    </script>
+</body>
+</html> 

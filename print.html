@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Справка по показаниям счетчиков</title>
+    <style>
+        @media print {
+            @page {
+                margin: 1cm;
+            }
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.2;
+            margin: 0;
+            padding: 10px;
+            font-size: 14px;
+        }
+
+        .print-container {
+            width: 14cm;
+            height: 5cm;
+            margin: 0 auto;
+            padding: 0;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2px;
+        }
+
+        .header h2 {
+            margin: 0 0 1px 0;
+            font-size: 15px;
+            line-height: 1;
+        }
+
+        .header p {
+            margin: 0;
+            line-height: 1;
+        }
+
+        .address {
+            margin-bottom: 3px;
+            text-align: center;
+            line-height: 1;
+        }
+
+        .bold {
+            font-weight: bold;
+        }
+
+        .underline {
+            text-decoration: underline;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 3px;
+        }
+
+        th, td {
+            border: 1px solid black;
+            padding: 2px;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        th {
+            line-height: 1.1;
+        }
+
+        .signature {
+            margin-top: 3px;
+            text-align: right;
+            line-height: 1;
+        }
+
+        .no-print {
+            display: none;
+        }
+
+        @media screen {
+            .no-print {
+                display: block;
+                margin: 20px 0;
+                text-align: center;
+            }
+
+            .print-btn {
+                padding: 10px 20px;
+                font-size: 16px;
+                background-color: #3498db;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                margin: 0 10px;
+            }
+
+            .print-btn:hover {
+                background-color: #2980b9;
+            }
+
+            body {
+                background-color: #f5f6fa;
+            }
+
+            .print-container {
+                background-color: white;
+                padding: 10px;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="print-container">
+        <div class="header">
+            <h2 class="bold">Справка</h2>
+            <p>расходования холодной и горячей воды по приборам учёта</p>
+        </div>
+
+        <div class="address">
+            <p>ул. Котовского д.45 квартира № <span class="bold" id="apartment">73</span> за <span class="underline" id="month">январь</span> месяц <span class="underline" id="year">2025</span> г.</p>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Вид</th>
+                    <th>Показания на<br>начало месяца</th>
+                    <th>Показания на<br>конец месяца</th>
+                    <th>Всего за месяц</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Холодная вода</td>
+                    <td id="coldPrev">-</td>
+                    <td id="coldCurrent">-</td>
+                    <td id="coldTotal">-</td>
+                </tr>
+                <tr>
+                    <td>Горячая вода</td>
+                    <td id="hotPrev">-</td>
+                    <td id="hotCurrent">-</td>
+                    <td id="hotTotal">-</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="signature">
+            <p>Квартиросъемщик:_________________/__________________/</p>
+        </div>
+    </div>
+
+    <div class="no-print">
+        <button class="print-btn" onclick="window.print()">Печать</button>
+        <button class="print-btn" onclick="window.close()">Закрыть</button>
+    </div>
+
+    <script>
+        // Получаем параметры из URL
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        // Заполняем данные
+        document.getElementById('apartment').textContent = urlParams.get('apartment') || '73';
+        document.getElementById('month').textContent = urlParams.get('month') || 'январь';
+        document.getElementById('year').textContent = urlParams.get('year') || '2025';
+        
+        // Данные холодной воды
+        const coldPrev = urlParams.get('coldPrev');
+        const coldCurrent = urlParams.get('coldCurrent');
+        const coldTotal = urlParams.get('coldTotal');
+        
+        if (coldPrev) document.getElementById('coldPrev').textContent = coldPrev;
+        if (coldCurrent) document.getElementById('coldCurrent').textContent = coldCurrent;
+        if (coldTotal) document.getElementById('coldTotal').textContent = coldTotal;
+        
+        // Данные горячей воды
+        const hotPrev = urlParams.get('hotPrev');
+        const hotCurrent = urlParams.get('hotCurrent');
+        const hotTotal = urlParams.get('hotTotal');
+        
+        if (hotPrev) document.getElementById('hotPrev').textContent = hotPrev;
+        if (hotCurrent) document.getElementById('hotCurrent').textContent = hotCurrent;
+        if (hotTotal) document.getElementById('hotTotal').textContent = hotTotal;
+        
+        console.log('Справка загружена с параметрами:', {
+            apartment: urlParams.get('apartment'),
+            month: urlParams.get('month'),
+            year: urlParams.get('year'),
+            coldPrev: coldPrev,
+            coldCurrent: coldCurrent,
+            coldTotal: coldTotal,
+            hotPrev: hotPrev,
+            hotCurrent: hotCurrent,
+            hotTotal: hotTotal
+        });
+    </script>
+</body>
+</html> 

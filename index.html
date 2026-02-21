@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Показания счетчиков</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <h1>📝 Ввод показаний счетчиков</h1>
+        <nav>
+            <a href="history.html" class="nav-link nav-link-light">📊 История показаний</a>
+            <a href="tariffs.html" class="nav-link nav-link-light">💰 Управление тарифами</a>
+            
+        </nav>
+    </header>
+    <main>
+        <!-- Фильтр для выбора города -->
+        <div class="filter-container">
+            <div class="filter-row">
+                <div class="filter-item">
+                    <label for="citySelect">Выберите город:</label>
+                    <select id="citySelect" class="filter-select">
+                        <!-- Опции будут добавлены через JavaScript -->
+                    </select>
+                </div>
+            </div>
+        </div>
+        <!-- Контейнер для таблицы -->
+        <div class="table-container">
+            <table class="meter-table">
+                <thead>
+                    <tr>
+                        <th>Тип ресурса</th>
+                        <th>Дата предыдущих показаний</th>
+                        <th>Предыдущие показания</th>
+                        <th>Дата текущих показаний</th>
+                        <th>Показания</th>
+                        <th>Расход</th>
+                        <th>Сумма</th>
+                    </tr>
+                </thead>
+                <tbody id="meterTableBody">
+                    <!-- Строки таблицы будут добавлены через JavaScript -->
+                </tbody>
+            </table>
+        </div>
+        <!-- Контейнер для кнопок -->
+        <div class="button-container">
+            <button id="calculateButton" class="btn">Рассчитать</button>
+            <button id="saveButton" class="btn">Сохранить</button>
+            <button id="printButton" class="btn">Распечатать справку</button>
+        </div>
+        <!-- Блок для отображения итоговой суммы -->
+        <div id="totalAmount" class="total-amount"></div>
+    </main>
+
+    
+
+    <!-- Appwrite SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@11.0.0"></script>
+    <!-- Конфигурация Appwrite -->
+    <script src="appwrite-config.js"></script>
+    <!-- Основной скрипт -->
+    <script src="script-appwrite.js"></script>
+    <!-- Инициализация приложения -->
+    <script>
+        // Проверяем загрузку Appwrite SDK
+        window.addEventListener('load', function() {
+            console.log('=== ДИАГНОСТИКА ЗАГРУЗКИ ===');
+            console.log('Appwrite SDK загружен:', typeof Appwrite !== 'undefined');
+            
+            if (typeof Appwrite === 'undefined') {
+                alert('Ошибка загрузки Appwrite SDK');
+                console.error('Appwrite SDK не загружен');
+            } else {
+                console.log('Appwrite SDK загружен успешно');
+                console.log('Доступные классы:', Object.keys(Appwrite));
+            }
+            
+            // Проверяем константы
+            console.log('Проверка констант:');
+            console.log('DATABASE_ID:', typeof DATABASE_ID !== 'undefined' ? DATABASE_ID : 'НЕ ОПРЕДЕЛЕН');
+            console.log('CITIES_COLLECTION_ID:', typeof CITIES_COLLECTION_ID !== 'undefined' ? CITIES_COLLECTION_ID : 'НЕ ОПРЕДЕЛЕН');
+            console.log('METER_READINGS_COLLECTION_ID:', typeof METER_READINGS_COLLECTION_ID !== 'undefined' ? METER_READINGS_COLLECTION_ID : 'НЕ ОПРЕДЕЛЕН');
+            
+            // Проверяем текущий origin
+            console.log('Текущий origin:', window.location.origin);
+            console.log('Текущий URL:', window.location.href);
+            
+            // Проверяем, запущено ли приложение локально
+            const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            console.log('Запущено локально:', isLocalhost);
+            
+            if (!isLocalhost) {
+                console.warn('⚠️ ВНИМАНИЕ: Приложение запущено не локально!');
+                console.warn('Это может вызвать проблемы с CORS при работе с Appwrite.');
+                console.warn('Рекомендуется запускать через http://localhost:8081');
+            }
+        });
+    </script>
+</body>
+</html>

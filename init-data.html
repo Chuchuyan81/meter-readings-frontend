@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Инициализация данных - Система учета показаний счетчиков</title>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .warning {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .config-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+        .config-section h3 {
+            margin-top: 0;
+            color: #495057;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #545b62;
+        }
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .log-output {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+        .instructions {
+            background-color: #e3f2fd;
+            border: 1px solid #bbdefb;
+            color: #0d47a1;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .instructions h3 {
+            margin-top: 0;
+            color: #0d47a1;
+        }
+        .instructions ol {
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Инициализация данных системы</h1>
+        
+        <div class="instructions">
+            <h3>Инструкция по использованию:</h3>
+            <ol>
+                <li>Убедитесь, что вы создали проект в Appwrite и настроили коллекции согласно APPWRITE_SETUP.md</li>
+                <li>Введите ваш Project ID в поле ниже</li>
+                <li>Нажмите "Инициализировать данные" для создания начальных данных</li>
+                <li>Проверьте логи для отслеживания прогресса</li>
+            </ol>
+        </div>
+        
+        <div class="warning">
+            <strong>Внимание!</strong> Убедитесь, что все коллекции созданы в Appwrite перед запуском инициализации.
+        </div>
+        
+        <div class="success" id="successMessage">
+            <strong>Успешно!</strong> Данные инициализированы.
+        </div>
+        
+        <div class="error" id="errorMessage">
+            <strong>Ошибка!</strong> <span id="errorText"></span>
+        </div>
+        
+        <div class="config-section">
+            <h3>Конфигурация Appwrite</h3>
+            <div class="form-group">
+                <label for="projectId">Project ID:</label>
+                <input type="text" id="projectId" placeholder="Введите ваш Project ID из Appwrite">
+            </div>
+            <div class="form-group">
+                <label for="endpoint">Endpoint:</label>
+                <input type="text" id="endpoint" value="https://cloud.appwrite.io/v1" placeholder="Endpoint Appwrite">
+            </div>
+        </div>
+        
+        <div class="button-group">
+            <button class="btn-primary" id="initButton">Инициализировать данные</button>
+            <button class="btn-secondary" id="checkButton">Проверить существующие данные</button>
+            <button class="btn-danger" id="clearButton">Очистить все данные</button>
+        </div>
+        
+        <div class="log-output" id="logOutput"></div>
+    </div>
+
+    <!-- Appwrite SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@15.0.0"></script>
+    
+    <script>
+        // Глобальная конфигурация
+        let APPWRITE_CONFIG = {
+            endpoint: 'https://cloud.appwrite.io/v1',
+            projectId: '',
+            databaseId: 'meters_db',
+            collections: {
+                cities: 'cities',
+                meterTypes: 'meter_types',
+                meters: 'meters',
+                meterReadings: 'meter_readings',
+                tariffs: 'tariffs'
+            }
+        };
+
+        // Элементы DOM
+        const projectIdInput = document.getElementById('projectId');
+        const endpointInput = document.getElementById('endpoint');
+        const initButton = document.getElementById('initButton');
+        const checkButton = document.getElementById('checkButton');
+        const clearButton = document.getElementById('clearButton');
+        const logOutput = document.getElementById('logOutput');
+        const successMessage = document.getElementById('successMessage');
+        const errorMessage = document.getElementById('errorMessage');
+        const errorText = document.getElementById('errorText');
+
+        // Функция для логирования
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            logOutput.textContent += `[${timestamp}] ${message}\n`;
+            logOutput.scrollTop = logOutput.scrollHeight;
+            console.log(message);
+        }
+
+        // Функция для показа сообщений
+        function showSuccess(message) {
+            successMessage.style.display = 'block';
+            errorMessage.style.display = 'none';
+            log(`✅ ${message}`);
+        }
+
+        function showError(message) {
+            errorMessage.style.display = 'block';
+            errorText.textContent = message;
+            successMessage.style.display = 'none';
+            log(`❌ ${message}`);
+        }
+
+        // Функция для обновления конфигурации
+        function updateConfig() {
+            APPWRITE_CONFIG.projectId = projectIdInput.value.trim();
+            APPWRITE_CONFIG.endpoint = endpointInput.value.trim();
+        }
+
+        // Загрузка сохраненной конфигурации
+        function loadConfig() {
+            const saved = localStorage.getItem('appwrite_config');
+            if (saved) {
+                const config = JSON.parse(saved);
+                projectIdInput.value = config.projectId || '';
+                endpointInput.value = config.endpoint || 'https://cloud.appwrite.io/v1';
+            }
+        }
+
+        // Сохранение конфигурации
+        function saveConfig() {
+            localStorage.setItem('appwrite_config', JSON.stringify({
+                projectId: projectIdInput.value.trim(),
+                endpoint: endpointInput.value.trim()
+            }));
+        }
+
+        // Инициализация Appwrite клиента
+        function initAppwrite() {
+            updateConfig();
+            
+            if (!APPWRITE_CONFIG.projectId) {
+                throw new Error('Project ID не указан');
+            }
+            
+            const { Client, Databases } = Appwrite;
+            const client = new Client();
+            const databases = new Databases(client);
+            
+            client
+                .setEndpoint(APPWRITE_CONFIG.endpoint)
+                .setProject(APPWRITE_CONFIG.projectId);
+            
+            return { client, databases };
+        }
+
+        // Загрузка скрипта инициализации
+        function loadInitScript() {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = 'init-data.js';
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
+
+        // Обработчики событий
+        initButton.addEventListener('click', async () => {
+            try {
+                initButton.disabled = true;
+                logOutput.textContent = '';
+                
+                updateConfig();
+                saveConfig();
+                
+                const { databases } = initAppwrite();
+                
+                log('Начинаем инициализацию данных...');
+                
+                // Здесь будет код инициализации данных
+                await window.initializeData();
+                
+                showSuccess('Данные успешно инициализированы!');
+            } catch (error) {
+                showError(`Ошибка инициализации: ${error.message}`);
+            } finally {
+                initButton.disabled = false;
+            }
+        });
+
+        checkButton.addEventListener('click', async () => {
+            try {
+                checkButton.disabled = true;
+                logOutput.textContent = '';
+                
+                const { databases } = initAppwrite();
+                
+                log('Проверяем существующие данные...');
+                
+                // Проверка каждой коллекции
+                for (const [name, id] of Object.entries(APPWRITE_CONFIG.collections)) {
+                    try {
+                        const response = await databases.listDocuments(
+                            APPWRITE_CONFIG.databaseId,
+                            id
+                        );
+                        log(`${name}: ${response.documents.length} документов`);
+                    } catch (error) {
+                        log(`${name}: Ошибка - ${error.message}`);
+                    }
+                }
+                
+                showSuccess('Проверка завершена!');
+            } catch (error) {
+                showError(`Ошибка проверки: ${error.message}`);
+            } finally {
+                checkButton.disabled = false;
+            }
+        });
+
+        clearButton.addEventListener('click', async () => {
+            if (!confirm('Вы уверены, что хотите удалить ВСЕ данные? Это действие нельзя отменить!')) {
+                return;
+            }
+            
+            try {
+                clearButton.disabled = true;
+                logOutput.textContent = '';
+                
+                const { databases } = initAppwrite();
+                
+                log('Начинаем очистку данных...');
+                
+                // Здесь будет код очистки данных
+                await window.clearAllData();
+                
+                showSuccess('Данные успешно очищены!');
+            } catch (error) {
+                showError(`Ошибка очистки: ${error.message}`);
+            } finally {
+                clearButton.disabled = false;
+            }
+        });
+
+        // Инициализация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', () => {
+            loadConfig();
+            log('Страница инициализации загружена');
+            log('Введите Project ID и нажмите нужную кнопку');
+        });
+    </script>
+    
+    <!-- Подключение скрипта инициализации данных -->
+    <script src="init-data.js"></script>
+</body>
+</html> 
