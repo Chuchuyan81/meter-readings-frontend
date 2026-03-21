@@ -1,12 +1,19 @@
 // Скрипт для настройки CORS в Appwrite через API
 // ВАЖНО: Этот скрипт требует API ключи с правами администратора
 
+require('dotenv').config({ path: require('path').resolve(__dirname, '.env') });
+
 const { Client, Projects, Teams } = require('node-appwrite');
 
 // Конфигурация
 const APPWRITE_ENDPOINT = "https://cloud.appwrite.io/v1";
 const APPWRITE_PROJECT_ID = "68790cc0001f9d5ee482";
-const API_KEY = "standard_004ffb9fe334a79a700b6458572237392550ab90d400275fde1cf51ff0ceae22babed0ca955832e01ba74369b117826367f9db559c0987fa6c64a9ca287f5ae75e4040616d36705b1d86d902da5b4348c438b08e11f344978ddb480bef8fd30a2d2ab5eed1cfee6c0580f2c861766bb807201af18cade268babd59238f2580e9";
+
+const API_KEY = process.env.APPWRITE_API_KEY && process.env.APPWRITE_API_KEY.trim();
+if (!API_KEY) {
+    console.error('Задайте APPWRITE_API_KEY в файле .env (скопируйте из .env.example и вставьте ключ).');
+    process.exit(1);
+}
 
 async function setupCORS() {
     try {
@@ -91,27 +98,13 @@ async function setupCORS() {
 console.log(`
 === ИНСТРУКЦИЯ ПО НАСТРОЙКЕ CORS ===
 
-1. Получите API ключ в консоли Appwrite:
-   - Перейдите в Settings → API Keys
-   - Создайте новый ключ с правами администратора
-   - Скопируйте ключ
+1. Скопируйте .env.example в .env и укажите APPWRITE_API_KEY (серверный ключ из Appwrite).
 
-2. Замените YOUR_API_KEY_HERE на ваш API ключ
+2. Установите зависимости: npm install
 
-3. Установите зависимости:
-   npm install node-appwrite
+3. Запустите: node setup-cors.js
 
-4. Запустите скрипт:
-   node setup-cors.js
-
-АЛЬТЕРНАТИВНО - настройте вручную через консоль:
-1. Откройте https://cloud.appwrite.io/console
-2. Выберите проект
-3. Settings → Security → Platforms
-4. Добавьте платформу:
-   - Name: GitHub Pages
-   - Hostname: chuchuyan81.github.io
-   - Protocol: https
+Вручную в консоли: https://cloud.appwrite.io → проект → Settings → Platforms → добавьте web-платформу с hostname chuchuyan81.github.io
 `);
 
 // Запускаем настройку CORS
